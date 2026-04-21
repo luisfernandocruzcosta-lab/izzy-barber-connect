@@ -421,7 +421,7 @@ const Index = () => {
                       <div key={`${item.service}-${item.date}`} className="flex items-center justify-between rounded-2xl border border-border/70 bg-secondary/45 px-4 py-3">
                         <div>
                           <p className="text-sm font-semibold text-foreground">{item.service}</p>
-                          <p className="text-sm text-muted-foreground">{item.barbeiro} · {item.date}</p>
+                          <p className="text-sm text-muted-foreground">{item.barber} · {item.date}</p>
                         </div>
                         <span className="text-sm font-medium text-brand">{item.points}</span>
                       </div>
