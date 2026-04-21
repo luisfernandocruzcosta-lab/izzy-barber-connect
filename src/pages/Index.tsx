@@ -161,7 +161,7 @@ const Index = () => {
                 <span className="gold-chip">barbearia urbana · premium · responsiva</span>
 
                 <div className="logo-stage mx-auto max-w-3xl lg:mx-0">
-                  <img src={logo} alt="Identidade visual Izzy Barber em estilo grafite" className="logo-mark w-full max-w-[42rem]" />
+                  <img src={logo} alt="Identidade visual Izzy Barber em estilo grafite" className="logo-mark w-full max-w-[42rem] shadow-md opacity-80" />
                 </div>
 
                 <div className="mx-auto max-w-2xl space-y-4 lg:mx-0">
