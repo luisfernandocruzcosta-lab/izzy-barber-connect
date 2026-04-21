@@ -129,7 +129,11 @@ const Index = () => {
         <div className="container relative py-5 sm:py-6 lg:py-8">
           <header className="flex items-center justify-between gap-4 border-b border-border/60 pb-4 sm:pb-5">
             <a href="#home" className="flex items-center gap-3">
-              <img src={logo} alt="Logo Izzy Barber" className="h-9 w-auto sm:h-11" />
+              <img src={logo} alt="Logo Izzy Barber" className="h-10 w-auto sm:h-12" />
+              <div className="hidden sm:block">
+                <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Izzy Barber</p>
+                <p className="text-sm font-semibold text-foreground">Street luxury grooming</p>
+              </div>
             </a>
 
             <nav className="hidden items-center gap-6 md:flex">
@@ -158,29 +162,40 @@ const Index = () => {
           <div id="home" className="grid gap-8 py-10 sm:py-14 lg:grid-cols-[minmax(0,1.15fr)_24rem] lg:items-center lg:gap-10 lg:py-16 xl:py-20">
             <div className="space-y-8 lg:space-y-10">
               <div className="space-y-5 text-center lg:text-left">
-                <span className="gold-chip">barbearia urbana · premium · responsiva</span>
+                <span className="gold-chip">izzy barber · dark urban identity</span>
 
-                <div className="logo-stage mx-auto max-w-3xl lg:mx-0">
-                  <img src={logo} alt="Identidade visual Izzy Barber em estilo grafite" className="logo-mark w-full max-w-[42rem] shadow-md opacity-80" />
+                <div className="space-y-4">
+                  <p className="text-xs uppercase tracking-[0.32em] text-muted-foreground">marca em destaque</p>
+                  <div className="relative">
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-x-0 -top-5 text-center font-display text-[clamp(3.8rem,12vw,8.5rem)] leading-none text-foreground/5 lg:text-left"
+                    >
+                      IZZY
+                    </span>
+                    <div className="logo-stage mx-auto max-w-3xl lg:mx-0">
+                      <img src={logo} alt="Identidade visual Izzy Barber em estilo grafite" className="logo-mark w-full max-w-[42rem] shadow-md opacity-80" />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="mx-auto max-w-2xl space-y-4 lg:mx-0">
                   <h1 className="text-balance text-4xl font-semibold leading-tight text-foreground sm:text-5xl lg:text-6xl">
-                    Presença dark, agendamento simples e experiência marcante para cliente e barbeiro.
+                    Izzy Barber com presença forte, visual exclusivo e uma vitrine urbana de alto padrão.
                   </h1>
                   <p className="max-w-xl text-sm leading-7 text-muted-foreground sm:text-base">
-                    A Izzy Barber ganha uma vitrine moderna com foco total na logo, serviços bem destacados, login central e uma jornada pronta para crescer com agenda, lembretes e gestão diária.
+                    A marca vira o centro da experiência: logo com respiro, contraste premium, navegação limpa e uma jornada intuitiva para agendar, entrar e gerenciar a agenda.
                   </p>
                 </div>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
                 <Button variant="hero" size="pill" className="sm:min-w-44">
-                  Book appointment
+                  Agendar horário
                   <ArrowRight className="size-4" />
                 </Button>
                 <Button variant="outline" size="pill" className="sm:min-w-44">
-                  Ver serviços
+                  Explorar a Izzy
                 </Button>
               </div>
 
