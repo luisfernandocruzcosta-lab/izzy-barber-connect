@@ -19,6 +19,7 @@ import {
 import logo from "@/assets/izzy-barber-logo.png";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { GlobalAuthPanel } from "@/components/GlobalAuthPanel";
 import { Input } from "@/components/ui/input";
 
 const shopData = [
@@ -165,44 +166,48 @@ const Index = () => {
               </div>
             </div>
 
-            <aside className="glass-panel relative overflow-hidden rounded-[1.5rem] p-4 shadow-glow sm:p-5">
-              <div className="absolute -right-8 top-6 size-28 rounded-full bg-brand/15 blur-3xl" aria-hidden="true" />
-              <div className="relative space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">agenda em destaque</span>
-                  <span className="gold-chip">MVP</span>
-                </div>
+            <aside className="space-y-4">
+              <GlobalAuthPanel />
 
-                <div className="rounded-2xl border border-border/70 bg-surface p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-12 items-center justify-center rounded-full border border-brand/20 bg-brand-soft text-brand">
-                      <Scissors className="size-5" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Próximo horário livre</p>
-                      <p className="text-xl font-semibold text-foreground">{selectedShopData.nextSlot}</p>
-                    </div>
-                  </div>
-                  <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs text-muted-foreground">
-                    {['13:00', '14:30', '16:00'].map((slot) => (
-                      <div key={slot} className="rounded-xl border border-border/70 bg-secondary/60 px-2 py-3 text-foreground">
-                        {slot}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-border/70 bg-secondary/40 p-4">
+              <div className="glass-panel relative overflow-hidden rounded-[1.5rem] p-4 sm:p-5">
+                <div className="absolute -right-8 top-6 size-28 rounded-full bg-brand/15 blur-3xl" aria-hidden="true" />
+                <div className="relative space-y-4">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Sugestão inteligente</p>
-                      <p className="text-lg font-semibold text-foreground">Hora de renovar seu fade</p>
-                    </div>
-                    <Sparkles className="size-5 text-brand" />
+                    <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">agenda em destaque</span>
+                    <span className="gold-chip">MVP</span>
                   </div>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    Com base na sua frequência, o melhor momento para reagendar é nos próximos 3 dias.
-                  </p>
+
+                  <div className="rounded-2xl border border-border/70 bg-surface p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-12 items-center justify-center rounded-full border border-brand/20 bg-brand-soft text-brand">
+                        <Scissors className="size-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Próximo horário livre</p>
+                        <p className="text-xl font-semibold text-foreground">{selectedShopData.nextSlot}</p>
+                      </div>
+                    </div>
+                    <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs text-muted-foreground">
+                      {["13:00", "14:30", "16:00"].map((slot) => (
+                        <div key={slot} className="rounded-xl border border-border/70 bg-secondary/60 px-2 py-3 text-foreground">
+                          {slot}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-border/70 bg-secondary/40 p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Sugestão inteligente</p>
+                        <p className="text-lg font-semibold text-foreground">Hora de renovar seu fade</p>
+                      </div>
+                      <Sparkles className="size-5 text-brand" />
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      Com base na sua frequência, o melhor momento para reagendar é nos próximos 3 dias.
+                    </p>
+                  </div>
                 </div>
               </div>
             </aside>
