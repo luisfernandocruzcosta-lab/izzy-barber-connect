@@ -1,459 +1,429 @@
 import { useMemo, useState } from "react";
 import {
+  ArrowRight,
   BellRing,
   CalendarDays,
   ChevronRight,
   Clock3,
-  Heart,
   MapPin,
-  Medal,
   Scissors,
-  Search,
   ShieldCheck,
   Sparkles,
   Star,
   Store,
-  Users,
+  UserRound,
 } from "lucide-react";
 
 import logo from "@/assets/izzy-barber-logo.png";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { GlobalAuthPanel } from "@/components/GlobalAuthPanel";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
-const shopData = [
+const services = [
   {
-    name: "Gold Line Studio",
-    area: "Centro",
-    rating: 4.9,
-    eta: "6 min",
-    services: ["Corte premium", "Barba express", "Pigmentação"],
-    price: "A partir de R$ 35",
-    nextSlot: "Hoje · 14:30",
+    name: "Corte premium",
+    time: "45 min",
+    price: "R$ 45",
+    description: "Acabamento preciso, consultoria rápida e visual limpo para a semana inteira.",
   },
   {
-    name: "Noir Barber Club",
-    area: "Jardins",
-    rating: 4.8,
-    eta: "11 min",
-    services: ["Fade", "Sobrancelha", "Combo clássico"],
-    price: "A partir de R$ 42",
-    nextSlot: "Hoje · 16:00",
+    name: "Barba desenhada",
+    time: "30 min",
+    price: "R$ 30",
+    description: "Linha definida com navalha e finalização suave para manter presença forte.",
   },
   {
-    name: "Imperial Cuts",
-    area: "Moema",
-    rating: 5.0,
-    eta: "18 min",
-    services: ["Navalhado", "Barboterapia", "Pacote VIP"],
-    price: "A partir de R$ 55",
-    nextSlot: "Amanhã · 09:15",
+    name: "Sobrancelha",
+    time: "15 min",
+    price: "R$ 18",
+    description: "Detalhe rápido que mantém o rosto equilibrado sem pesar no visual.",
+  },
+  {
+    name: "Combo urbano",
+    time: "70 min",
+    price: "R$ 68",
+    description: "Corte, barba e acabamento completo em uma experiência direta e premium.",
   },
 ];
 
-const barberMetrics = [
-  { label: "Agendamentos hoje", value: "18", icon: CalendarDays },
-  { label: "Clientes ativos", value: "124", icon: Users },
-  { label: "Avaliação média", value: "4.9", icon: Star },
-  { label: "Pontos resgatados", value: "320", icon: Medal },
+const heroStats = [
+  { label: "Próximo horário", value: "Hoje · 19:30" },
+  { label: "Avaliação média", value: "4.9 / 5" },
+  { label: "Retorno de clientes", value: "87%" },
 ];
 
-const reminderMoments = [
-  "Lembrete às 09:00 no dia do corte",
-  "Confirmação automática 1 hora antes",
-  "Mensagem amigável com nome, serviço e horário",
+const bookingSteps = [
+  {
+    title: "Escolha o serviço",
+    text: "Fluxo enxuto para corte, barba, sobrancelha ou combo, sem poluição visual.",
+    icon: Scissors,
+  },
+  {
+    title: "Selecione o horário",
+    text: "Agenda mobile-first com horários disponíveis em tempo real e confirmação rápida.",
+    icon: CalendarDays,
+  },
+  {
+    title: "Confirme o atendimento",
+    text: "Login único para cliente e barbeiro, pronto para crescer com pagamentos e avaliações.",
+    icon: ShieldCheck,
+  },
 ];
 
-const customerHistory = [
-  { service: "Corte + barba", barber: "Ramon", date: "12 abr", points: "+30 pts" },
-  { service: "Fade premium", barber: "Kaique", date: "28 mar", points: "+20 pts" },
-  { service: "Barba express", barber: "Ramon", date: "11 mar", points: "+15 pts" },
+const modeViews = {
+  cliente: {
+    eyebrow: "experiência do cliente",
+    title: "Reserva em poucos toques",
+    description:
+      "Descoberta rápida, confirmação clara e lembretes automáticos para o cliente não perder o horário.",
+    bullets: [
+      "Busca direta por serviço e horário",
+      "Histórico de cortes e barbeiros favoritos",
+      "Avisos automáticos prontos para futura integração com WhatsApp",
+    ],
+    cta: "Reservar agora",
+  },
+  barbeiro: {
+    eyebrow: "operação do barbeiro",
+    title: "Dashboard simples e funcional",
+    description:
+      "Uma visão limpa da agenda, clientes do dia e serviços ativos para administrar a rotina sem atrito.",
+    bullets: [
+      "Painel de horários disponíveis e bloqueios",
+      "Cadastro de serviços, duração e preço",
+      "Visão do dia com status de confirmação e observações",
+    ],
+    cta: "Abrir painel",
+  },
+} as const;
+
+const schedulePreview = [
+  { time: "09:00", client: "Matheus Lima", service: "Corte premium", status: "Confirmado" },
+  { time: "11:30", client: "Igor Santos", service: "Barba desenhada", status: "Lembrete enviado" },
+  { time: "15:00", client: "Rafael Cruz", service: "Combo urbano", status: "Aguardando" },
+];
+
+const studioHighlights = [
+  {
+    title: "Dark com identidade forte",
+    text: "Fundo profundo, contraste alto e brilho sutil para valorizar a marca sem exagero.",
+  },
+  {
+    title: "Expansão pronta",
+    text: "Base organizada para pagamentos, avaliações, fidelidade e automações futuras.",
+  },
+  {
+    title: "Navegação intuitiva",
+    text: "Cliente agenda rápido. Barbeiro organiza a operação. Tudo com leitura clara no mobile.",
+  },
 ];
 
 const Index = () => {
   const [activeMode, setActiveMode] = useState<"cliente" | "barbeiro">("cliente");
-  const [selectedShop, setSelectedShop] = useState(shopData[0].name);
 
-  const selectedShopData = useMemo(
-    () => shopData.find((shop) => shop.name === selectedShop) ?? shopData[0],
-    [selectedShop],
-  );
+  const currentView = useMemo(() => modeViews[activeMode], [activeMode]);
 
   return (
     <main className="app-shell overflow-hidden">
-      <section className="section-grid relative isolate">
-        <div className="absolute inset-x-0 top-0 h-80 bg-aura opacity-80 blur-3xl" aria-hidden="true" />
-        <div className="container relative py-6 sm:py-8 lg:py-10">
-          <header className="glass-panel flex items-center justify-between rounded-2xl px-4 py-3 sm:px-6">
-            <div className="flex items-center gap-3">
-              <img src={logo} alt="Logo Izzy Barber" className="h-12 w-auto sm:h-14" />
-              <div>
-                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">barbearias conectadas</p>
-                <h1 className="font-display text-3xl leading-none text-foreground sm:text-4xl">Izzy Barber</h1>
-              </div>
-            </div>
+      <section className="section-grid relative isolate border-b border-border/60">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,hsl(var(--foreground)/0.06),transparent_38%)]" aria-hidden="true" />
+        <div className="container relative py-5 sm:py-6 lg:py-8">
+          <header className="flex items-center justify-between gap-4 border-b border-border/60 pb-4 sm:pb-5">
+            <a href="#home" className="flex items-center gap-3">
+              <img src={logo} alt="Logo Izzy Barber" className="h-9 w-auto sm:h-11" />
+            </a>
 
-            <div className="hidden items-center gap-2 md:flex">
-              <Button variant="ghost" size="pill">Entrar</Button>
-              <Button variant="hero" size="pill">Criar conta</Button>
+            <nav className="hidden items-center gap-6 md:flex">
+              {[
+                ["Home", "home"],
+                ["Serviços", "servicos"],
+                ["Agendamento", "agendamento"],
+                ["Login", "login"],
+              ].map(([label, target]) => (
+                <a key={target} href={`#${target}`} className="urban-link text-sm">
+                  {label}
+                </a>
+              ))}
+            </nav>
+
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="pill" className="hidden sm:inline-flex">
+                Entrar
+              </Button>
+              <Button variant="hero" size="pill">
+                Agendar
+              </Button>
             </div>
           </header>
 
-          <div className="grid gap-6 pt-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
-            <div className="space-y-6">
-              <div className="space-y-4">
-                <span className="gold-chip">agendamento online com estilo</span>
-                <div className="space-y-3">
-                  <h2 className="max-w-2xl font-display text-5xl leading-[0.92] text-foreground sm:text-6xl lg:text-7xl">
-                    Delivery de horários para a sua barbearia crescer.
-                  </h2>
-                  <p className="max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
-                    Descubra barbearias, reserve em segundos, acompanhe lembretes no WhatsApp e organize a operação do barbeiro em uma experiência fluida e pronta para virar app.
+          <div id="home" className="grid gap-8 py-10 sm:py-14 lg:grid-cols-[minmax(0,1.15fr)_24rem] lg:items-center lg:gap-10 lg:py-16 xl:py-20">
+            <div className="space-y-8 lg:space-y-10">
+              <div className="space-y-5 text-center lg:text-left">
+                <span className="gold-chip">barbearia urbana · premium · responsiva</span>
+
+                <div className="logo-stage mx-auto max-w-3xl lg:mx-0">
+                  <img src={logo} alt="Identidade visual Izzy Barber em estilo grafite" className="logo-mark w-full max-w-[42rem]" />
+                </div>
+
+                <div className="mx-auto max-w-2xl space-y-4 lg:mx-0">
+                  <h1 className="text-balance text-4xl font-semibold leading-tight text-foreground sm:text-5xl lg:text-6xl">
+                    Presença dark, agendamento simples e experiência marcante para cliente e barbeiro.
+                  </h1>
+                  <p className="max-w-xl text-sm leading-7 text-muted-foreground sm:text-base">
+                    A Izzy Barber ganha uma vitrine moderna com foco total na logo, serviços bem destacados, login central e uma jornada pronta para crescer com agenda, lembretes e gestão diária.
                   </p>
                 </div>
               </div>
 
-              <div className="glass-panel rounded-2xl p-4 sm:p-5">
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <div className="relative flex-1">
-                    <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      aria-label="Buscar barbearias"
-                      placeholder="Buscar barbearias, bairros ou serviços"
-                      className="h-12 rounded-xl border-border/70 bg-secondary pl-10"
-                    />
-                  </div>
-                  <Button variant="hero" size="pill" className="h-12">Buscar agenda</Button>
-                </div>
-
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {[
-                    "Corte premium",
-                    "Barba",
-                    "Sobrancelha",
-                    "Navalhado",
-                    "Atendimento VIP",
-                  ].map((item) => (
-                    <button
-                      key={item}
-                      className="rounded-full border border-border/70 bg-secondary/70 px-3 py-2 text-xs font-medium text-secondary-foreground transition hover:border-brand/40 hover:text-foreground"
-                    >
-                      {item}
-                    </button>
-                  ))}
-                </div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
+                <Button variant="hero" size="pill" className="sm:min-w-44">
+                  Book appointment
+                  <ArrowRight className="size-4" />
+                </Button>
+                <Button variant="outline" size="pill" className="sm:min-w-44">
+                  Ver serviços
+                </Button>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-3">
-                {[
-                  { icon: BellRing, title: "Lembretes automáticos", text: "No dia e 1 hora antes via fluxo pronto para WhatsApp." },
-                  { icon: Heart, title: "Fidelidade viva", text: "Pontos por corte, histórico e reativação baseada em frequência." },
-                  { icon: ShieldCheck, title: "Base segura", text: "Perfis completos, papéis separados e estrutura pronta para escalar." },
-                ].map((item) => (
-                  <Card key={item.title} className="glass-panel rounded-2xl border-border/60">
-                    <CardContent className="space-y-3 p-5">
-                      <div className="flex size-11 items-center justify-center rounded-full border border-brand/25 bg-brand-soft text-brand">
-                        <item.icon className="size-5" />
-                      </div>
-                      <div>
-                        <h3 className="text-base font-semibold text-foreground">{item.title}</h3>
-                        <p className="mt-1 text-sm leading-6 text-muted-foreground">{item.text}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {heroStats.map((item) => (
+                  <div key={item.label} className="metric-tile min-h-24">
+                    <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{item.label}</p>
+                    <p className="mt-3 text-lg font-semibold text-foreground">{item.value}</p>
+                  </div>
                 ))}
               </div>
             </div>
 
-            <aside className="space-y-4">
+            <div id="login" className="space-y-4">
               <GlobalAuthPanel />
 
-              <div className="glass-panel relative overflow-hidden rounded-[1.5rem] p-4 sm:p-5">
-                <div className="absolute -right-8 top-6 size-28 rounded-full bg-brand/15 blur-3xl" aria-hidden="true" />
-                <div className="relative space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">agenda em destaque</span>
-                    <span className="gold-chip">MVP</span>
+              <div className="glass-panel space-y-4 rounded-xl p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">agenda express</p>
+                    <h2 className="mt-2 text-2xl font-semibold text-foreground">Reserva com leitura clara no mobile</h2>
                   </div>
+                  <Sparkles className="size-5 text-brand" />
+                </div>
 
-                  <div className="rounded-2xl border border-border/70 bg-surface p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex size-12 items-center justify-center rounded-full border border-brand/20 bg-brand-soft text-brand">
-                        <Scissors className="size-5" />
-                      </div>
+                <div className="space-y-3 border-t border-border/60 pt-4">
+                  {[
+                    ["Corte premium", "Hoje · 19:30"],
+                    ["Barba desenhada", "Amanhã · 10:00"],
+                    ["Combo urbano", "Amanhã · 13:20"],
+                  ].map(([service, slot]) => (
+                    <div key={service} className="flex items-center justify-between gap-3 border-b border-border/40 pb-3 last:border-b-0 last:pb-0">
                       <div>
-                        <p className="text-sm text-muted-foreground">Próximo horário livre</p>
-                        <p className="text-xl font-semibold text-foreground">{selectedShopData.nextSlot}</p>
+                        <p className="text-sm font-semibold text-foreground">{service}</p>
+                        <p className="text-sm text-muted-foreground">Horário disponível</p>
                       </div>
+                      <span className="text-sm font-medium text-brand">{slot}</span>
                     </div>
-                    <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs text-muted-foreground">
-                      {["13:00", "14:30", "16:00"].map((slot) => (
-                        <div key={slot} className="rounded-xl border border-border/70 bg-secondary/60 px-2 py-3 text-foreground">
-                          {slot}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="rounded-2xl border border-border/70 bg-secondary/40 p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Sugestão inteligente</p>
-                        <p className="text-lg font-semibold text-foreground">Hora de renovar seu fade</p>
-                      </div>
-                      <Sparkles className="size-5 text-brand" />
-                    </div>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      Com base na sua frequência, o melhor momento para reagendar é nos próximos 3 dias.
-                    </p>
-                  </div>
+                  ))}
                 </div>
               </div>
-            </aside>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="container py-8 sm:py-10 lg:py-12">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">experiência central</p>
-            <h2 className="font-display text-4xl text-foreground sm:text-5xl">Cliente primeiro, operação redonda.</h2>
-          </div>
-
-          <div className="glass-panel inline-flex rounded-full p-1">
-            <Button
-              variant={activeMode === "cliente" ? "hero" : "tab"}
-              size="pill"
-              onClick={() => setActiveMode("cliente")}
-            >
-              Cliente
-            </Button>
-            <Button
-              variant={activeMode === "barbeiro" ? "hero" : "tab"}
-              size="pill"
-              onClick={() => setActiveMode("barbeiro")}
-            >
-              Barbeiro
-            </Button>
-          </div>
+      <section id="servicos" className="container py-12 sm:py-16">
+        <div className="mb-8 flex flex-col gap-3 sm:mb-10">
+          <span className="gold-chip w-fit">serviços em destaque</span>
+          <h2 className="max-w-2xl text-3xl font-semibold leading-tight text-foreground sm:text-4xl">
+            Poucos elementos, alto contraste e serviços apresentados com clareza.
+          </h2>
         </div>
 
-        {activeMode === "cliente" ? (
-          <div className="mt-6 grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
-            <div className="space-y-4">
-              {shopData.map((shop) => (
-                <button
-                  key={shop.name}
-                  onClick={() => setSelectedShop(shop.name)}
-                  className="glass-panel block w-full rounded-2xl p-4 text-left transition hover:-translate-y-1 hover:border-brand/30"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-semibold text-foreground">{shop.name}</h3>
-                        <span className="rounded-full border border-border/70 bg-secondary/70 px-2 py-1 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-                          {shop.area}
-                        </span>
-                      </div>
-                      <div className="mt-2 flex flex-wrap gap-3 text-sm text-muted-foreground">
-                        <span className="inline-flex items-center gap-1"><Star className="size-4 text-brand" /> {shop.rating}</span>
-                        <span className="inline-flex items-center gap-1"><MapPin className="size-4" /> {shop.eta}</span>
-                        <span className="inline-flex items-center gap-1"><Clock3 className="size-4" /> {shop.nextSlot}</span>
-                      </div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {services.map((service) => (
+            <article key={service.name} className="glass-panel flex min-h-[16rem] flex-col justify-between rounded-xl p-5 transition-transform duration-300 hover:-translate-y-1 hover:border-foreground/20">
+              <div className="space-y-4">
+                <div className="flex size-11 items-center justify-center rounded-full border border-border/70 bg-secondary/70 text-foreground">
+                  <Scissors className="size-5" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">{service.time}</p>
+                  <h3 className="mt-2 text-2xl font-semibold text-foreground">{service.name}</h3>
+                </div>
+                <p className="text-sm leading-7 text-muted-foreground">{service.description}</p>
+              </div>
+              <div className="mt-6 flex items-center justify-between border-t border-border/50 pt-4">
+                <span className="text-base font-semibold text-brand">{service.price}</span>
+                <span className="inline-flex items-center gap-2 text-sm text-foreground">
+                  Reservar
+                  <ChevronRight className="size-4" />
+                </span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section id="agendamento" className="container py-4 pb-12 sm:pb-16">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-start">
+          <div className="space-y-4">
+            <span className="gold-chip">jornada de agendamento</span>
+            <h2 className="max-w-xl text-3xl font-semibold leading-tight text-foreground sm:text-4xl">
+              Um fluxo real para cliente reservar e barbeiro controlar horários sem esforço.
+            </h2>
+            <p className="max-w-xl text-sm leading-7 text-muted-foreground sm:text-base">
+              A estrutura foi desenhada para parecer premium, carregar rápido e manter espaço negativo suficiente para a marca respirar.
+            </p>
+
+            <div className="space-y-3 pt-2">
+              {bookingSteps.map((step) => (
+                <div key={step.title} className="glass-panel rounded-xl p-4">
+                  <div className="flex items-start gap-4">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-full border border-border/70 bg-secondary/70 text-foreground">
+                      <step.icon className="size-4" />
                     </div>
-                    <Heart className="mt-1 size-5 text-muted-foreground" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-foreground">{step.title}</h3>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">{step.text}</p>
+                    </div>
                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {shop.services.map((service) => (
-                      <span key={service} className="rounded-full border border-border/70 bg-secondary/60 px-3 py-1.5 text-xs text-secondary-foreground">
-                        {service}
-                      </span>
-                    ))}
-                  </div>
+          <div className="space-y-4">
+            <div className="inline-flex rounded-full border border-border/70 bg-card/70 p-1">
+              <Button variant={activeMode === "cliente" ? "hero" : "tab"} size="pill" onClick={() => setActiveMode("cliente")}>
+                Cliente
+              </Button>
+              <Button variant={activeMode === "barbeiro" ? "hero" : "tab"} size="pill" onClick={() => setActiveMode("barbeiro")}>
+                Barbeiro
+              </Button>
+            </div>
 
-                  <div className="mt-4 flex items-center justify-between text-sm">
-                    <span className="font-medium text-brand">{shop.price}</span>
-                    <span className="inline-flex items-center gap-1 text-foreground">
-                      Reservar agora <ChevronRight className="size-4" />
-                    </span>
+            <div className="glass-panel rounded-xl p-5 sm:p-6">
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{currentView.eyebrow}</p>
+              <h3 className="mt-3 text-2xl font-semibold text-foreground">{currentView.title}</h3>
+              <p className="mt-3 text-sm leading-7 text-muted-foreground">{currentView.description}</p>
+
+              <div className="mt-5 space-y-3">
+                {currentView.bullets.map((item) => (
+                  <div key={item} className="flex items-start gap-3 border-b border-border/40 pb-3 last:border-b-0 last:pb-0">
+                    <span className="mt-2 size-2 rounded-full bg-brand" aria-hidden="true" />
+                    <p className="text-sm leading-7 text-foreground">{item}</p>
                   </div>
-                </button>
+                ))}
+              </div>
+
+              <Button variant="hero" size="pill" className="mt-6 w-full sm:w-auto">
+                {currentView.cta}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="container pb-12 sm:pb-16">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+          <div className="glass-panel rounded-xl p-5 sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <span className="gold-chip">dashboard do barbeiro</span>
+                <h2 className="mt-4 text-3xl font-semibold leading-tight text-foreground sm:text-4xl">
+                  Gestão de horários com visual direto e leitura rápida.
+                </h2>
+              </div>
+              <Store className="mt-1 size-5 text-brand" />
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+              {[
+                ["Agendamentos hoje", "18"],
+                ["Clientes ativos", "124"],
+                ["Taxa de retorno", "87%"],
+              ].map(([label, value]) => (
+                <div key={label} className="metric-tile min-h-24">
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+                  <p className="mt-3 text-2xl font-semibold text-foreground">{value}</p>
+                </div>
               ))}
             </div>
 
-            <Card className="glass-panel rounded-[1.5rem]">
-              <CardContent className="space-y-6 p-5 sm:p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Reserva rápida</p>
-                    <h3 className="text-2xl font-semibold text-foreground">{selectedShopData.name}</h3>
+            <div className="mt-6 space-y-3">
+              {schedulePreview.map((item) => (
+                <div key={`${item.time}-${item.client}`} className="flex flex-col gap-3 rounded-xl border border-border/60 bg-secondary/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-foreground">{item.time} · {item.client}</p>
+                    <p className="text-sm text-muted-foreground">{item.service}</p>
                   </div>
-                  <Store className="size-5 text-brand" />
+                  <span className="w-fit rounded-full border border-border/70 bg-card px-3 py-1 text-xs uppercase tracking-[0.12em] text-foreground">
+                    {item.status}
+                  </span>
                 </div>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {[
-                    { label: "Serviço", value: selectedShopData.services[0] },
-                    { label: "Barbeiro", value: "Ramon Costa" },
-                    { label: "Horário", value: selectedShopData.nextSlot },
-                    { label: "Pagamento", value: "Pix ou cartão" },
-                  ].map((item) => (
-                    <div key={item.label} className="metric-tile">
-                      <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">{item.label}</p>
-                      <p className="mt-2 text-sm font-semibold text-foreground">{item.value}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="rounded-2xl border border-border/70 bg-secondary/40 p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Sistema de lembrete</p>
-                      <p className="text-lg font-semibold text-foreground">Confirmação automática</p>
-                    </div>
-                    <BellRing className="size-5 text-brand" />
-                  </div>
-                  <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
-                    {reminderMoments.map((item) => (
-                      <li key={item} className="flex items-start gap-2">
-                        <span className="mt-1 size-2 rounded-full bg-brand" aria-hidden="true" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="rounded-2xl border border-border/70 bg-brand-soft/60 p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Clube de fidelidade</p>
-                      <p className="text-3xl font-semibold text-foreground">240 pontos</p>
-                    </div>
-                    <Medal className="size-6 text-brand" />
-                  </div>
-                  <p className="mt-2 text-sm text-muted-foreground">Faltam 60 pontos para liberar um corte cortesia.</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        ) : (
-          <div className="mt-6 grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
-            <Card className="glass-panel rounded-[1.5rem]">
-              <CardContent className="p-5 sm:p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Painel do barbeiro</p>
-                    <h3 className="text-2xl font-semibold text-foreground">Barbearia pronta para operar</h3>
-                  </div>
-                  <CalendarDays className="size-5 text-brand" />
-                </div>
-
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  {barberMetrics.map((metric) => (
-                    <div key={metric.label} className="metric-tile">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs uppercase tracking-[0.14em] text-muted-foreground">{metric.label}</span>
-                        <metric.icon className="size-4 text-brand" />
-                      </div>
-                      <p className="mt-4 text-3xl font-semibold text-foreground">{metric.value}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-5 rounded-2xl border border-border/70 bg-secondary/40 p-4">
-                  <p className="text-sm text-muted-foreground">Configurações essenciais</p>
-                  <div className="mt-4 space-y-3 text-sm text-foreground">
-                    {[
-                      "Cadastro da barbearia com logo, endereço e telefone",
-                      "Serviços com preço, duração e status ativo",
-                      "Agenda por dias disponíveis e horários do time",
-                      "Visão do dia com clientes, observações e confirmação",
-                    ].map((item) => (
-                      <div key={item} className="flex items-start gap-3 rounded-xl border border-border/60 bg-card/60 px-3 py-3">
-                        <span className="mt-1 size-2 rounded-full bg-brand" aria-hidden="true" />
-                        <span>{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="grid gap-4">
-              <Card className="glass-panel rounded-[1.5rem]">
-                <CardContent className="p-5 sm:p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Agenda do dia</p>
-                      <h3 className="text-xl font-semibold text-foreground">Quinta-feira · fluxo contínuo</h3>
-                    </div>
-                    <span className="gold-chip">18 reservas</span>
-                  </div>
-                  <div className="mt-4 space-y-3">
-                    {[
-                      { time: "09:00", client: "Matheus Lima", service: "Corte premium", status: "Confirmado" },
-                      { time: "10:30", client: "Igor Santos", service: "Barba + acabamento", status: "Lembrete enviado" },
-                      { time: "13:00", client: "Henrique Alves", service: "Fade + sobrancelha", status: "Aguardando" },
-                    ].map((entry) => (
-                      <div key={entry.time} className="flex items-center justify-between rounded-2xl border border-border/70 bg-secondary/45 px-4 py-3">
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">{entry.time} · {entry.client}</p>
-                          <p className="text-sm text-muted-foreground">{entry.service}</p>
-                        </div>
-                        <span className="rounded-full border border-brand/25 bg-brand-soft px-3 py-1 text-xs font-medium text-brand">
-                          {entry.status}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="glass-panel rounded-[1.5rem]">
-                <CardContent className="p-5 sm:p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Histórico do cliente</p>
-                      <h3 className="text-xl font-semibold text-foreground">Relacionamento que volta</h3>
-                    </div>
-                    <Heart className="size-5 text-brand" />
-                  </div>
-                  <div className="mt-4 space-y-3">
-                    {customerHistory.map((item) => (
-                      <div key={`${item.service}-${item.date}`} className="flex items-center justify-between rounded-2xl border border-border/70 bg-secondary/45 px-4 py-3">
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">{item.service}</p>
-                          <p className="text-sm text-muted-foreground">{item.barber} · {item.date}</p>
-                        </div>
-                        <span className="text-sm font-medium text-brand">{item.points}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              ))}
             </div>
           </div>
-        )}
+
+          <div className="space-y-4">
+            <div className="glass-panel rounded-xl p-5 sm:p-6">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <span className="gold-chip">integração futura</span>
+                  <h3 className="mt-4 text-2xl font-semibold text-foreground">Lembretes automáticos e expansão sem retrabalho.</h3>
+                </div>
+                <BellRing className="mt-1 size-5 text-brand" />
+              </div>
+              <div className="mt-5 space-y-3">
+                {[
+                  "Confirmação no dia do atendimento",
+                  "Aviso uma hora antes com nome, serviço e horário",
+                  "Base pronta para conectar WhatsApp e pagamentos",
+                ].map((item) => (
+                  <div key={item} className="flex items-start gap-3">
+                    <span className="mt-2 size-2 rounded-full bg-brand" aria-hidden="true" />
+                    <p className="text-sm leading-7 text-muted-foreground">{item}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="glass-panel rounded-xl p-5 sm:p-6">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <span className="gold-chip">presença premium</span>
+                  <h3 className="mt-4 text-2xl font-semibold text-foreground">Design enxuto com clima urbano e resposta rápida.</h3>
+                </div>
+                <MapPin className="mt-1 size-5 text-brand" />
+              </div>
+              <div className="mt-5 grid gap-3">
+                {studioHighlights.map((item) => (
+                  <div key={item.title} className="border-b border-border/40 pb-3 last:border-b-0 last:pb-0">
+                    <p className="text-sm font-semibold text-foreground">{item.title}</p>
+                    <p className="mt-2 text-sm leading-7 text-muted-foreground">{item.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <section className="container pb-10 sm:pb-12">
-        <div className="grid gap-4 lg:grid-cols-3">
-          {[
-            { title: "Avaliações reais", text: "Estrelas e comentários ajudam clientes a encontrar o melhor barbeiro em segundos.", icon: Star },
-            { title: "Expansão futura", text: "A base já comporta autenticação, banco, favoritos, fidelidade e automações server-side.", icon: ShieldCheck },
-            { title: "Navegação rápida", text: "Estrutura pensada para parecer um app de delivery: descoberta, escolha e reserva sem atrito.", icon: ChevronRight },
-          ].map((item) => (
-            <Card key={item.title} className="glass-panel rounded-2xl">
-              <CardContent className="space-y-3 p-5">
-                <item.icon className="size-5 text-brand" />
-                <h3 className="text-lg font-semibold text-foreground">{item.title}</h3>
-                <p className="text-sm leading-6 text-muted-foreground">{item.text}</p>
-              </CardContent>
-            </Card>
-          ))}
+      <section className="container pb-14 sm:pb-20">
+        <div className="glass-panel rounded-xl px-5 py-6 text-center sm:px-8 sm:py-8">
+          <span className="gold-chip mx-auto">izzy barber</span>
+          <h2 className="mx-auto mt-4 max-w-3xl text-3xl font-semibold leading-tight text-foreground sm:text-4xl">
+            Uma plataforma moderna, exclusiva e pronta para conectar barbeiros e clientes de forma visualmente marcante.
+          </h2>
+          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Button variant="hero" size="pill">
+              Começar agora
+            </Button>
+            <Button variant="outline" size="pill">
+              Ver fluxo completo
+            </Button>
+          </div>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
+            <span className="inline-flex items-center gap-2"><Clock3 className="size-4" /> Carregamento rápido</span>
+            <span className="inline-flex items-center gap-2"><UserRound className="size-4" /> Login para cliente e barbeiro</span>
+            <span className="inline-flex items-center gap-2"><Star className="size-4" /> Pronto para avaliações</span>
+          </div>
         </div>
       </section>
     </main>
