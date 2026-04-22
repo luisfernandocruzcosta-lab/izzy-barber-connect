@@ -41,8 +41,8 @@ const financeHighlights = [
 const Index = () => {
   const { session, isBarber } = useAuth();
 
-  const primaryHref = session ? (isBarber ? "/painel" : "/") : "/auth";
-  const primaryLabel = session ? (isBarber ? "Abrir meu painel" : "Minha conta") : "Criar conta gratuita";
+  const primaryHref = session ? (isBarber ? "/painel" : "/buscar") : "/buscar";
+  const primaryLabel = session ? (isBarber ? "Abrir meu painel" : "Agendar agora") : "Buscar barbearias";
 
   return (
     <main className="app-shell overflow-hidden">
@@ -155,7 +155,7 @@ const Index = () => {
                   Encontre sua barbearia favorita e reserve o horário direto pelo app.
                 </p>
                 <Button asChild variant="outline" size="pill" className="mt-4 w-full">
-                  <Link to="/auth">Quero agendar</Link>
+                  <Link to="/buscar">Quero agendar</Link>
                 </Button>
               </div>
             </div>
