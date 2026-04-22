@@ -71,28 +71,28 @@ const bookingSteps = [
 
 const modeViews = {
   cliente: {
-    eyebrow: "experiência do cliente",
-    title: "Reserva em poucos toques",
+    eyebrow: "Para você",
+    title: "Agende em poucos toques",
     description:
-      "Descoberta rápida, confirmação clara e lembretes automáticos para o cliente não perder o horário.",
+      "Encontre o serviço ideal, escolha o horário e confirme sua reserva de forma rápida e simples.",
     bullets: [
       "Busca direta por serviço e horário",
       "Histórico de cortes e barbeiros favoritos",
-      "Avisos automáticos prontos para futura integração com WhatsApp",
+      "Lembretes automáticos por WhatsApp",
     ],
-    cta: "Reservar agora",
+    cta: "Agendar agora",
   },
   barbeiro: {
-    eyebrow: "operação do barbeiro",
-    title: "Dashboard simples e funcional",
+    eyebrow: "Para profissionais",
+    title: "Gerencie sua agenda",
     description:
-      "Uma visão limpa da agenda, clientes do dia e serviços ativos para administrar a rotina sem atrito.",
+      "Controle seus horários, visualize clientes do dia e organize sua rotina de forma prática.",
     bullets: [
       "Painel de horários disponíveis e bloqueios",
       "Cadastro de serviços, duração e preço",
-      "Visão do dia com status de confirmação e observações",
+      "Visão do dia com status de confirmação",
     ],
-    cta: "Abrir painel",
+    cta: "Acessar painel",
   },
 } as const;
 
@@ -132,7 +132,7 @@ const Index = () => {
               <img src={logo} alt="Logo Izzy Barber" className="h-10 w-auto sm:h-12" />
               <div className="hidden sm:block">
                 <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Izzy Barber</p>
-                <p className="text-sm font-semibold text-foreground">Street luxury grooming</p>
+                <p className="text-sm font-semibold text-foreground">Estilo urbano premium</p>
               </div>
             </a>
 
@@ -162,17 +162,8 @@ const Index = () => {
           <div id="home" className="grid gap-8 py-10 sm:py-14 lg:grid-cols-[minmax(0,1.15fr)_24rem] lg:items-center lg:gap-10 lg:py-16 xl:py-20">
             <div className="space-y-8 lg:space-y-10">
               <div className="space-y-5 text-center lg:text-left">
-                <span className="gold-chip">izzy barber · dark urban identity</span>
-
                 <div className="space-y-4">
-                  <p className="text-xs uppercase tracking-[0.32em] text-muted-foreground">marca em destaque</p>
                   <div className="relative">
-                    <span
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-x-0 -top-5 text-center font-display text-[clamp(3.8rem,12vw,8.5rem)] leading-none text-foreground/5 lg:text-left"
-                    >
-                      IZZY
-                    </span>
                     <div className="logo-stage mx-auto max-w-3xl lg:mx-0">
                       <img src={logo} alt="Identidade visual Izzy Barber em estilo grafite" className="logo-mark w-full max-w-[42rem] shadow-md opacity-80" />
                     </div>
