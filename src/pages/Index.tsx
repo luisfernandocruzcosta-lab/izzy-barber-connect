@@ -162,17 +162,8 @@ const Index = () => {
           <div id="home" className="grid gap-8 py-10 sm:py-14 lg:grid-cols-[minmax(0,1.15fr)_24rem] lg:items-center lg:gap-10 lg:py-16 xl:py-20">
             <div className="space-y-8 lg:space-y-10">
               <div className="space-y-5 text-center lg:text-left">
-                <span className="gold-chip">izzy barber · dark urban identity</span>
-
                 <div className="space-y-4">
-                  <p className="text-xs uppercase tracking-[0.32em] text-muted-foreground">marca em destaque</p>
                   <div className="relative">
-                    <span
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-x-0 -top-5 text-center font-display text-[clamp(3.8rem,12vw,8.5rem)] leading-none text-foreground/5 lg:text-left"
-                    >
-                      IZZY
-                    </span>
                     <div className="logo-stage mx-auto max-w-3xl lg:mx-0">
                       <img src={logo} alt="Identidade visual Izzy Barber em estilo grafite" className="logo-mark w-full max-w-[42rem] shadow-md opacity-80" />
                     </div>
