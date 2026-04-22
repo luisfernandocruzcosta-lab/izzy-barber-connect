@@ -123,10 +123,9 @@ const Painel = () => {
       supabase
         .from("appointments")
         .select(
-          `id, starts_at, ends_at, status,
+          `id, starts_at, ends_at, status, client_user_id,
            service:services(name, price_cents),
-           staff:shop_staff(display_name),
-           client:profiles!appointments_client_user_id_fkey(full_name)`
+           staff:shop_staff(display_name)`
         )
         .eq("shop_id", shopData.id)
         .gte("starts_at", dayStart.toISOString())
@@ -136,7 +135,24 @@ const Painel = () => {
 
     setStaff(staffRes.data ?? []);
     setServices(servicesRes.data ?? []);
-    setTodayAppts((apptsRes.data ?? []) as unknown as Appt[]);
+
+    // Carrega nomes dos clientes em uma segunda query (sem FK definida)
+    const apptsRaw = (apptsRes.data ?? []) as Array<Appt & { client_user_id: string }>;
+    const clientIds = Array.from(new Set(apptsRaw.map((a) => a.client_user_id)));
+    let profilesMap: Record<string, string | null> = {};
+    if (clientIds.length > 0) {
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", clientIds);
+      profilesMap = Object.fromEntries((profilesData ?? []).map((p) => [p.id, p.full_name]));
+    }
+    setTodayAppts(
+      apptsRaw.map((a) => ({
+        ...a,
+        client: { full_name: profilesMap[a.client_user_id] ?? null },
+      }))
+    );
 
     // Busca regras de todos os staff da loja
     const staffIds = (staffRes.data ?? []).map((s) => s.id);
