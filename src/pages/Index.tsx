@@ -132,7 +132,7 @@ const Index = () => {
               <img src={logo} alt="Logo Izzy Barber" className="h-10 w-auto sm:h-12" />
               <div className="hidden sm:block">
                 <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Izzy Barber</p>
-                <p className="text-sm font-semibold text-foreground">Street luxury grooming</p>
+                <p className="text-sm font-semibold text-foreground">Estilo urbano premium</p>
               </div>
             </a>
 
