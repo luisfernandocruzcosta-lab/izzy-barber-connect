@@ -1,15 +1,37 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, LogOut, Plus, Scissors, Store, Trash2, Users } from "lucide-react";
+import {
+  CalendarCheck,
+  CheckCircle2,
+  Clock,
+  DollarSign,
+  Loader2,
+  LogOut,
+  Plus,
+  Scissors,
+  Store,
+  Trash2,
+  Users,
+  XCircle,
+} from "lucide-react";
 
 import logo from "@/assets/izzy-barber-logo.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { formatDate, formatPriceCents, formatTime } from "@/lib/booking";
 
 type Shop = {
   id: string;
@@ -19,20 +41,20 @@ type Shop = {
   description: string | null;
 };
 
-type Staff = {
+type Staff = { id: string; display_name: string; bio: string | null; is_bookable: boolean };
+type Service = { id: string; name: string; duration_minutes: number; price_cents: number; is_active: boolean };
+type Rule = { id: string; staff_id: string; weekday: number; start_time: string; end_time: string; is_active: boolean };
+type Appt = {
   id: string;
-  display_name: string;
-  bio: string | null;
-  is_bookable: boolean;
+  starts_at: string;
+  ends_at: string;
+  status: string;
+  service: { name: string; price_cents: number } | null;
+  staff: { display_name: string } | null;
+  client: { full_name: string | null } | null;
 };
 
-type Service = {
-  id: string;
-  name: string;
-  duration_minutes: number;
-  price_cents: number;
-  is_active: boolean;
-};
+const WEEKDAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
 const Painel = () => {
   const navigate = useNavigate();
@@ -43,11 +65,13 @@ const Painel = () => {
   const [shop, setShop] = useState<Shop | null>(null);
   const [staff, setStaff] = useState<Staff[]>([]);
   const [services, setServices] = useState<Service[]>([]);
+  const [rules, setRules] = useState<Rule[]>([]);
+  const [todayAppts, setTodayAppts] = useState<Appt[]>([]);
 
-  // Forms
   const [shopForm, setShopForm] = useState({ name: "", address: "", phone: "", description: "" });
   const [staffForm, setStaffForm] = useState({ display_name: "", bio: "" });
   const [serviceForm, setServiceForm] = useState({ name: "", duration: "30", price: "" });
+  const [ruleForm, setRuleForm] = useState({ staff_id: "", weekday: "1", start: "09:00", end: "18:00" });
   const [savingShop, setSavingShop] = useState(false);
 
   useEffect(() => {
@@ -57,58 +81,85 @@ const Painel = () => {
       return;
     }
     if (!isBarber) {
-      toast({
-        title: "Acesso restrito",
-        description: "Esta área é exclusiva para barbearias.",
-        variant: "destructive",
-      });
+      toast({ title: "Acesso restrito", description: "Esta área é exclusiva para barbearias.", variant: "destructive" });
       navigate("/", { replace: true });
     }
   }, [authLoading, user, isBarber, navigate, toast]);
 
-  const loadData = async () => {
+  const loadAll = async () => {
     if (!user) return;
     setLoading(true);
 
-    // Carrega APENAS a barbearia deste dono — RLS garante isolamento
     const { data: shopData } = await supabase
       .from("barber_shops")
       .select("id, name, address, phone, description")
       .eq("owner_user_id", user.id)
       .maybeSingle();
 
-    if (shopData) {
-      setShop(shopData);
-
-      const [{ data: staffData }, { data: servicesData }] = await Promise.all([
-        supabase
-          .from("shop_staff")
-          .select("id, display_name, bio, is_bookable")
-          .eq("shop_id", shopData.id)
-          .order("created_at"),
-        supabase
-          .from("services")
-          .select("id, name, duration_minutes, price_cents, is_active")
-          .eq("shop_id", shopData.id)
-          .order("created_at"),
-      ]);
-
-      setStaff(staffData ?? []);
-      setServices(servicesData ?? []);
-    } else {
+    if (!shopData) {
       setShop(null);
       setStaff([]);
       setServices([]);
+      setRules([]);
+      setTodayAppts([]);
+      setLoading(false);
+      return;
     }
 
+    setShop(shopData);
+
+    const dayStart = new Date();
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date();
+    dayEnd.setHours(23, 59, 59, 999);
+
+    const [staffRes, servicesRes, rulesRes, apptsRes] = await Promise.all([
+      supabase.from("shop_staff").select("id, display_name, bio, is_bookable").eq("shop_id", shopData.id).order("created_at"),
+      supabase.from("services").select("id, name, duration_minutes, price_cents, is_active").eq("shop_id", shopData.id).order("created_at"),
+      supabase
+        .from("availability_rules")
+        .select("id, staff_id, weekday, start_time, end_time, is_active")
+        .in("staff_id", []), // será refeito
+      supabase
+        .from("appointments")
+        .select(
+          `id, starts_at, ends_at, status,
+           service:services(name, price_cents),
+           staff:shop_staff(display_name),
+           client:profiles!appointments_client_user_id_fkey(full_name)`
+        )
+        .eq("shop_id", shopData.id)
+        .gte("starts_at", dayStart.toISOString())
+        .lte("starts_at", dayEnd.toISOString())
+        .order("starts_at"),
+    ]);
+
+    setStaff(staffRes.data ?? []);
+    setServices(servicesRes.data ?? []);
+    setTodayAppts((apptsRes.data ?? []) as unknown as Appt[]);
+
+    // Busca regras de todos os staff da loja
+    const staffIds = (staffRes.data ?? []).map((s) => s.id);
+    if (staffIds.length > 0) {
+      const { data: r } = await supabase
+        .from("availability_rules")
+        .select("id, staff_id, weekday, start_time, end_time, is_active")
+        .in("staff_id", staffIds);
+      setRules((r ?? []) as Rule[]);
+    } else {
+      setRules([]);
+    }
+
+    setRuleForm((prev) => ({ ...prev, staff_id: staffIds[0] ?? "" }));
     setLoading(false);
   };
 
   useEffect(() => {
-    if (user && isBarber) void loadData();
+    if (user && isBarber) void loadAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isBarber]);
 
+  // ----- Handlers -----
   const handleCreateShop = async () => {
     if (!user) return;
     if (!shopForm.name || !shopForm.address) {
@@ -124,45 +175,34 @@ const Painel = () => {
       description: shopForm.description || null,
     });
     setSavingShop(false);
-
     if (error) {
-      toast({ title: "Erro ao cadastrar barbearia", description: error.message, variant: "destructive" });
+      toast({ title: "Erro ao cadastrar", description: error.message, variant: "destructive" });
       return;
     }
     toast({ title: "Barbearia cadastrada" });
     setShopForm({ name: "", address: "", phone: "", description: "" });
-    void loadData();
+    void loadAll();
   };
 
   const handleAddStaff = async () => {
-    if (!shop || !user) return;
-    if (!staffForm.display_name) {
-      toast({ title: "Informe o nome do barbeiro", variant: "destructive" });
-      return;
-    }
+    if (!shop || !user || !staffForm.display_name) return;
     const { error } = await supabase.from("shop_staff").insert({
       shop_id: shop.id,
-      user_id: user.id, // dono é referência inicial; pode ser editado depois
+      user_id: user.id,
       display_name: staffForm.display_name,
       bio: staffForm.bio || null,
     });
-    if (error) {
-      toast({ title: "Erro ao adicionar barbeiro", description: error.message, variant: "destructive" });
-      return;
-    }
+    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
     toast({ title: "Barbeiro adicionado" });
     setStaffForm({ display_name: "", bio: "" });
-    void loadData();
+    void loadAll();
   };
 
   const handleDeleteStaff = async (id: string) => {
     const { error } = await supabase.from("shop_staff").delete().eq("id", id);
-    if (error) {
-      toast({ title: "Erro ao remover", description: error.message, variant: "destructive" });
-      return;
-    }
+    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
     toast({ title: "Barbeiro removido" });
-    void loadData();
+    void loadAll();
   };
 
   const handleAddService = async () => {
@@ -179,36 +219,62 @@ const Painel = () => {
       duration_minutes: duration,
       price_cents: Math.round(priceReais * 100),
     });
-    if (error) {
-      toast({ title: "Erro ao adicionar serviço", description: error.message, variant: "destructive" });
-      return;
-    }
+    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
     toast({ title: "Serviço adicionado" });
     setServiceForm({ name: "", duration: "30", price: "" });
-    void loadData();
+    void loadAll();
   };
 
   const handleDeleteService = async (id: string) => {
     const { error } = await supabase.from("services").delete().eq("id", id);
-    if (error) {
-      toast({ title: "Erro ao remover", description: error.message, variant: "destructive" });
-      return;
-    }
+    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
     toast({ title: "Serviço removido" });
-    void loadData();
+    void loadAll();
   };
 
-  const formatPrice = (cents: number) =>
-    (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const handleAddRule = async () => {
+    if (!ruleForm.staff_id) {
+      toast({ title: "Cadastre primeiro um barbeiro", variant: "destructive" });
+      return;
+    }
+    if (ruleForm.start >= ruleForm.end) {
+      toast({ title: "Horário inválido", description: "Início deve ser antes do fim.", variant: "destructive" });
+      return;
+    }
+    const { error } = await supabase.from("availability_rules").insert({
+      staff_id: ruleForm.staff_id,
+      weekday: parseInt(ruleForm.weekday, 10),
+      start_time: ruleForm.start,
+      end_time: ruleForm.end,
+    });
+    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
+    toast({ title: "Horário adicionado" });
+    void loadAll();
+  };
 
-  const stats = useMemo(
-    () => [
-      { label: "Barbeiros", value: staff.length },
-      { label: "Serviços", value: services.length },
-      { label: "Status", value: shop ? "Ativo" : "—" },
-    ],
-    [staff, services, shop]
-  );
+  const handleDeleteRule = async (id: string) => {
+    const { error } = await supabase.from("availability_rules").delete().eq("id", id);
+    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
+    void loadAll();
+  };
+
+  const handleApptStatus = async (id: string, status: "completed" | "cancelled") => {
+    const { error } = await supabase.from("appointments").update({ status }).eq("id", id);
+    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
+    toast({ title: status === "completed" ? "Atendimento concluído" : "Reserva cancelada" });
+    void loadAll();
+  };
+
+  // ----- Métricas do dia -----
+  const stats = useMemo(() => {
+    const completed = todayAppts.filter((a) => a.status === "completed");
+    const revenue = completed.reduce((sum, a) => sum + (a.service?.price_cents ?? 0), 0);
+    return {
+      total: todayAppts.filter((a) => a.status !== "cancelled").length,
+      completed: completed.length,
+      revenue,
+    };
+  }, [todayAppts]);
 
   if (authLoading || loading) {
     return (
@@ -217,6 +283,8 @@ const Painel = () => {
       </main>
     );
   }
+
+  const staffById = (id: string) => staff.find((s) => s.id === id)?.display_name ?? "—";
 
   return (
     <main className="ambient-bg relative isolate min-h-screen">
@@ -239,47 +307,25 @@ const Painel = () => {
             <div className="text-center">
               <Store className="mx-auto size-10 text-brand" />
               <h1 className="mt-4 text-3xl font-semibold text-foreground">Cadastre sua barbearia</h1>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Em poucos minutos sua agenda e seu caixa estarão prontos.
-              </p>
+              <p className="mt-2 text-sm text-muted-foreground">Em poucos minutos sua agenda estará pronta.</p>
             </div>
 
             <div className="glass-panel space-y-4 rounded-2xl p-6">
               <div className="space-y-2">
-                <Label>Nome da barbearia *</Label>
-                <Input
-                  value={shopForm.name}
-                  onChange={(e) => setShopForm({ ...shopForm, name: e.target.value })}
-                  placeholder="Izzy Barber Centro"
-                  className="rounded-xl bg-card"
-                />
+                <Label>Nome *</Label>
+                <Input value={shopForm.name} onChange={(e) => setShopForm({ ...shopForm, name: e.target.value })} className="rounded-xl bg-card" />
               </div>
               <div className="space-y-2">
                 <Label>Endereço *</Label>
-                <Input
-                  value={shopForm.address}
-                  onChange={(e) => setShopForm({ ...shopForm, address: e.target.value })}
-                  placeholder="Rua, número, bairro"
-                  className="rounded-xl bg-card"
-                />
+                <Input value={shopForm.address} onChange={(e) => setShopForm({ ...shopForm, address: e.target.value })} className="rounded-xl bg-card" />
               </div>
               <div className="space-y-2">
                 <Label>Telefone</Label>
-                <Input
-                  value={shopForm.phone}
-                  onChange={(e) => setShopForm({ ...shopForm, phone: e.target.value })}
-                  placeholder="(00) 90000-0000"
-                  className="rounded-xl bg-card"
-                />
+                <Input value={shopForm.phone} onChange={(e) => setShopForm({ ...shopForm, phone: e.target.value })} className="rounded-xl bg-card" />
               </div>
               <div className="space-y-2">
                 <Label>Descrição</Label>
-                <Textarea
-                  value={shopForm.description}
-                  onChange={(e) => setShopForm({ ...shopForm, description: e.target.value })}
-                  placeholder="Conte sobre o estilo da sua barbearia"
-                  className="rounded-xl bg-card"
-                />
+                <Textarea value={shopForm.description} onChange={(e) => setShopForm({ ...shopForm, description: e.target.value })} className="rounded-xl bg-card" />
               </div>
               <Button variant="hero" size="pill" className="w-full" onClick={handleCreateShop} disabled={savingShop}>
                 {savingShop && <Loader2 className="size-4 animate-spin" />}
@@ -290,142 +336,260 @@ const Painel = () => {
         ) : (
           <div className="mt-8 space-y-6">
             <section>
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <h1 className="text-3xl font-semibold text-foreground">Olá, {shop.name}</h1>
-                  <p className="mt-1 text-sm text-muted-foreground">{shop.address}</p>
-                </div>
-              </div>
+              <h1 className="text-3xl font-semibold text-foreground">{shop.name}</h1>
+              <p className="mt-1 text-sm text-muted-foreground">{shop.address}</p>
+
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                {stats.map((s) => (
-                  <div key={s.label} className="metric-tile">
-                    <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">{s.label}</p>
-                    <p className="mt-2 text-2xl font-semibold text-foreground">{s.value}</p>
-                  </div>
-                ))}
+                <div className="metric-tile">
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Agendamentos hoje</p>
+                  <p className="mt-2 text-2xl font-semibold text-foreground">{stats.total}</p>
+                </div>
+                <div className="metric-tile">
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Concluídos</p>
+                  <p className="mt-2 text-2xl font-semibold text-foreground">{stats.completed}</p>
+                </div>
+                <div className="metric-tile">
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Faturado hoje</p>
+                  <p className="mt-2 text-2xl font-semibold text-foreground">{formatPriceCents(stats.revenue)}</p>
+                </div>
               </div>
             </section>
 
-            <section className="grid gap-6 lg:grid-cols-2">
-              {/* Barbeiros */}
-              <div className="glass-panel space-y-5 rounded-2xl p-5 sm:p-6">
-                <div className="flex items-center gap-3">
-                  <Users className="size-5 text-brand" />
-                  <h2 className="text-xl font-semibold text-foreground">Barbeiros</h2>
-                </div>
+            <Tabs defaultValue="agenda" className="space-y-4">
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+                <TabsTrigger value="agenda">Agenda</TabsTrigger>
+                <TabsTrigger value="equipe">Equipe</TabsTrigger>
+                <TabsTrigger value="servicos">Serviços</TabsTrigger>
+                <TabsTrigger value="horarios">Horários</TabsTrigger>
+              </TabsList>
 
-                <div className="space-y-3 rounded-xl border border-border/60 bg-secondary/40 p-4">
-                  <div className="space-y-2">
-                    <Label>Nome do barbeiro</Label>
-                    <Input
-                      value={staffForm.display_name}
-                      onChange={(e) => setStaffForm({ ...staffForm, display_name: e.target.value })}
-                      placeholder="João Silva"
-                      className="rounded-xl bg-card"
-                    />
+              {/* AGENDA DO DIA */}
+              <TabsContent value="agenda">
+                <div className="glass-panel rounded-2xl p-5 sm:p-6">
+                  <div className="flex items-center gap-3">
+                    <CalendarCheck className="size-5 text-brand" />
+                    <h2 className="text-xl font-semibold text-foreground">Agenda do dia · {formatDate(new Date())}</h2>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Bio (opcional)</Label>
-                    <Input
-                      value={staffForm.bio}
-                      onChange={(e) => setStaffForm({ ...staffForm, bio: e.target.value })}
-                      placeholder="Especialista em degradê"
-                      className="rounded-xl bg-card"
-                    />
-                  </div>
-                  <Button variant="hero" size="pill" className="w-full" onClick={handleAddStaff}>
-                    <Plus className="size-4" /> Adicionar barbeiro
-                  </Button>
-                </div>
 
-                <div className="space-y-2">
+                  {todayAppts.length === 0 ? (
+                    <p className="mt-4 text-sm text-muted-foreground">Nenhum agendamento para hoje.</p>
+                  ) : (
+                    <ul className="mt-4 space-y-2">
+                      {todayAppts.map((a) => (
+                        <li
+                          key={a.id}
+                          className="flex flex-col gap-3 rounded-xl border border-border/60 bg-card/60 p-4 sm:flex-row sm:items-center sm:justify-between"
+                        >
+                          <div>
+                            <p className="text-sm uppercase tracking-[0.12em] text-muted-foreground">
+                              <Clock className="mr-1 inline size-3.5" /> {formatTime(a.starts_at)} – {formatTime(a.ends_at)}
+                            </p>
+                            <p className="mt-1 text-base font-semibold text-foreground">
+                              {a.client?.full_name ?? "Cliente"}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {a.service?.name ?? "Serviço"} · {a.staff?.display_name}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="inline-flex items-center gap-1 text-sm font-semibold text-brand">
+                              <DollarSign className="size-4" />
+                              {formatPriceCents(a.service?.price_cents ?? 0)}
+                            </span>
+                            {a.status === "confirmed" || a.status === "pending" ? (
+                              <>
+                                <Button size="sm" variant="hero" onClick={() => handleApptStatus(a.id, "completed")}>
+                                  <CheckCircle2 className="size-4" /> Concluir
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={() => handleApptStatus(a.id, "cancelled")}>
+                                  <XCircle className="size-4" />
+                                </Button>
+                              </>
+                            ) : (
+                              <span className="rounded-full border border-border/70 bg-secondary px-3 py-1 text-xs uppercase tracking-[0.12em] text-foreground">
+                                {a.status}
+                              </span>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* EQUIPE */}
+              <TabsContent value="equipe">
+                <div className="glass-panel space-y-5 rounded-2xl p-5 sm:p-6">
+                  <div className="flex items-center gap-3">
+                    <Users className="size-5 text-brand" />
+                    <h2 className="text-xl font-semibold text-foreground">Barbeiros</h2>
+                  </div>
+
+                  <div className="space-y-3 rounded-xl border border-border/60 bg-secondary/40 p-4">
+                    <div className="space-y-2">
+                      <Label>Nome</Label>
+                      <Input value={staffForm.display_name} onChange={(e) => setStaffForm({ ...staffForm, display_name: e.target.value })} className="rounded-xl bg-card" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Bio (opcional)</Label>
+                      <Input value={staffForm.bio} onChange={(e) => setStaffForm({ ...staffForm, bio: e.target.value })} className="rounded-xl bg-card" />
+                    </div>
+                    <Button variant="hero" size="pill" className="w-full" onClick={handleAddStaff}>
+                      <Plus className="size-4" /> Adicionar barbeiro
+                    </Button>
+                  </div>
+
                   {staff.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Nenhum barbeiro cadastrado ainda.</p>
+                    <p className="text-sm text-muted-foreground">Nenhum barbeiro cadastrado.</p>
                   ) : (
-                    staff.map((s) => (
-                      <div
-                        key={s.id}
-                        className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/60 p-3"
-                      >
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">{s.display_name}</p>
-                          {s.bio && <p className="text-xs text-muted-foreground">{s.bio}</p>}
-                        </div>
-                        <Button variant="ghost" size="icon" onClick={() => handleDeleteStaff(s.id)}>
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </div>
-                    ))
+                    <ul className="space-y-2">
+                      {staff.map((s) => (
+                        <li key={s.id} className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/60 p-3">
+                          <div>
+                            <p className="text-sm font-semibold text-foreground">{s.display_name}</p>
+                            {s.bio && <p className="text-xs text-muted-foreground">{s.bio}</p>}
+                          </div>
+                          <Button variant="ghost" size="icon" onClick={() => handleDeleteStaff(s.id)}>
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
                   )}
                 </div>
-              </div>
+              </TabsContent>
 
-              {/* Serviços */}
-              <div className="glass-panel space-y-5 rounded-2xl p-5 sm:p-6">
-                <div className="flex items-center gap-3">
-                  <Scissors className="size-5 text-brand" />
-                  <h2 className="text-xl font-semibold text-foreground">Serviços</h2>
-                </div>
-
-                <div className="space-y-3 rounded-xl border border-border/60 bg-secondary/40 p-4">
-                  <div className="space-y-2">
-                    <Label>Nome do serviço</Label>
-                    <Input
-                      value={serviceForm.name}
-                      onChange={(e) => setServiceForm({ ...serviceForm, name: e.target.value })}
-                      placeholder="Corte premium"
-                      className="rounded-xl bg-card"
-                    />
+              {/* SERVIÇOS */}
+              <TabsContent value="servicos">
+                <div className="glass-panel space-y-5 rounded-2xl p-5 sm:p-6">
+                  <div className="flex items-center gap-3">
+                    <Scissors className="size-5 text-brand" />
+                    <h2 className="text-xl font-semibold text-foreground">Serviços</h2>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label>Duração (min)</Label>
-                      <Input
-                        type="number"
-                        value={serviceForm.duration}
-                        onChange={(e) => setServiceForm({ ...serviceForm, duration: e.target.value })}
-                        className="rounded-xl bg-card"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Preço (R$)</Label>
-                      <Input
-                        value={serviceForm.price}
-                        onChange={(e) => setServiceForm({ ...serviceForm, price: e.target.value })}
-                        placeholder="45,00"
-                        className="rounded-xl bg-card"
-                      />
-                    </div>
-                  </div>
-                  <Button variant="hero" size="pill" className="w-full" onClick={handleAddService}>
-                    <Plus className="size-4" /> Adicionar serviço
-                  </Button>
-                </div>
 
-                <div className="space-y-2">
+                  <div className="space-y-3 rounded-xl border border-border/60 bg-secondary/40 p-4">
+                    <div className="space-y-2">
+                      <Label>Nome</Label>
+                      <Input value={serviceForm.name} onChange={(e) => setServiceForm({ ...serviceForm, name: e.target.value })} className="rounded-xl bg-card" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label>Duração (min)</Label>
+                        <Input type="number" value={serviceForm.duration} onChange={(e) => setServiceForm({ ...serviceForm, duration: e.target.value })} className="rounded-xl bg-card" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Preço (R$)</Label>
+                        <Input value={serviceForm.price} onChange={(e) => setServiceForm({ ...serviceForm, price: e.target.value })} placeholder="45,00" className="rounded-xl bg-card" />
+                      </div>
+                    </div>
+                    <Button variant="hero" size="pill" className="w-full" onClick={handleAddService}>
+                      <Plus className="size-4" /> Adicionar serviço
+                    </Button>
+                  </div>
+
                   {services.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Nenhum serviço cadastrado ainda.</p>
+                    <p className="text-sm text-muted-foreground">Nenhum serviço cadastrado.</p>
                   ) : (
-                    services.map((s) => (
-                      <div
-                        key={s.id}
-                        className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/60 p-3"
-                      >
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">{s.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {s.duration_minutes} min · {formatPrice(s.price_cents)}
-                          </p>
-                        </div>
-                        <Button variant="ghost" size="icon" onClick={() => handleDeleteService(s.id)}>
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </div>
-                    ))
+                    <ul className="space-y-2">
+                      {services.map((s) => (
+                        <li key={s.id} className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/60 p-3">
+                          <div>
+                            <p className="text-sm font-semibold text-foreground">{s.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {s.duration_minutes} min · {formatPriceCents(s.price_cents)}
+                            </p>
+                          </div>
+                          <Button variant="ghost" size="icon" onClick={() => handleDeleteService(s.id)}>
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
                   )}
                 </div>
-              </div>
-            </section>
+              </TabsContent>
+
+              {/* HORÁRIOS DE ATENDIMENTO */}
+              <TabsContent value="horarios">
+                <div className="glass-panel space-y-5 rounded-2xl p-5 sm:p-6">
+                  <div className="flex items-center gap-3">
+                    <Clock className="size-5 text-brand" />
+                    <h2 className="text-xl font-semibold text-foreground">Horários de atendimento</h2>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Defina os dias e horários em que cada barbeiro atende. Os clientes só verão slots dentro dessas faixas.
+                  </p>
+
+                  {staff.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Cadastre primeiro um barbeiro na aba Equipe.</p>
+                  ) : (
+                    <div className="space-y-3 rounded-xl border border-border/60 bg-secondary/40 p-4">
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label>Barbeiro</Label>
+                          <Select value={ruleForm.staff_id} onValueChange={(v) => setRuleForm({ ...ruleForm, staff_id: v })}>
+                            <SelectTrigger className="rounded-xl bg-card"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {staff.map((s) => (
+                                <SelectItem key={s.id} value={s.id}>{s.display_name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Dia da semana</Label>
+                          <Select value={ruleForm.weekday} onValueChange={(v) => setRuleForm({ ...ruleForm, weekday: v })}>
+                            <SelectTrigger className="rounded-xl bg-card"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {WEEKDAYS.map((d, i) => (
+                                <SelectItem key={i} value={String(i)}>{d}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Início</Label>
+                          <Input type="time" value={ruleForm.start} onChange={(e) => setRuleForm({ ...ruleForm, start: e.target.value })} className="rounded-xl bg-card" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Fim</Label>
+                          <Input type="time" value={ruleForm.end} onChange={(e) => setRuleForm({ ...ruleForm, end: e.target.value })} className="rounded-xl bg-card" />
+                        </div>
+                      </div>
+                      <Button variant="hero" size="pill" className="w-full" onClick={handleAddRule}>
+                        <Plus className="size-4" /> Adicionar horário
+                      </Button>
+                    </div>
+                  )}
+
+                  {rules.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Nenhum horário definido ainda.</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {rules
+                        .slice()
+                        .sort((a, b) => a.weekday - b.weekday || a.start_time.localeCompare(b.start_time))
+                        .map((r) => (
+                          <li key={r.id} className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/60 p-3">
+                            <div>
+                              <p className="text-sm font-semibold text-foreground">
+                                {staffById(r.staff_id)} · {WEEKDAYS[r.weekday]}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {r.start_time.slice(0, 5)} – {r.end_time.slice(0, 5)}
+                              </p>
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteRule(r.id)}>
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </li>
+                        ))}
+                    </ul>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         )}
       </div>
