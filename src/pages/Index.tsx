@@ -3,15 +3,18 @@ import {
   ArrowRight,
   BellRing,
   CalendarDays,
+  CalendarCheck,
   ChevronRight,
   Clock3,
-  MapPin,
+  DollarSign,
+  LineChart,
   Scissors,
   ShieldCheck,
   Sparkles,
   Star,
-  Store,
+  TrendingUp,
   UserRound,
+  Wallet,
 } from "lucide-react";
 
 import logo from "@/assets/izzy-barber-logo.png";
@@ -23,13 +26,13 @@ const services = [
     name: "Corte premium",
     time: "45 min",
     price: "R$ 45",
-    description: "Acabamento preciso, consultoria rápida e visual limpo para a semana inteira.",
+    description: "Acabamento preciso e visual limpo, com agendamento em poucos toques.",
   },
   {
     name: "Barba desenhada",
     time: "30 min",
     price: "R$ 30",
-    description: "Linha definida com navalha e finalização suave para manter presença forte.",
+    description: "Linha definida com navalha e finalização suave para presença forte.",
   },
   {
     name: "Sobrancelha",
@@ -38,33 +41,33 @@ const services = [
     description: "Detalhe rápido que mantém o rosto equilibrado sem pesar no visual.",
   },
   {
-    name: "Combo urbano",
+    name: "Combo completo",
     time: "70 min",
     price: "R$ 68",
-    description: "Corte, barba e acabamento completo em uma experiência direta e premium.",
+    description: "Corte, barba e acabamento em uma experiência direta e premium.",
   },
 ];
 
 const heroStats = [
-  { label: "Próximo horário", value: "Hoje · 19:30" },
-  { label: "Avaliação média", value: "4.9 / 5" },
-  { label: "Retorno de clientes", value: "87%" },
+  { label: "Agendamentos hoje", value: "18" },
+  { label: "Faturamento do dia", value: "R$ 1.240" },
+  { label: "Taxa de ocupação", value: "92%" },
 ];
 
 const bookingSteps = [
   {
-    title: "Escolha o serviço",
-    text: "Fluxo enxuto para corte, barba, sobrancelha ou combo, sem poluição visual.",
+    title: "Cliente escolhe o serviço",
+    text: "Catálogo claro com duração e preço para o cliente reservar sem dúvidas.",
     icon: Scissors,
   },
   {
-    title: "Selecione o horário",
-    text: "Agenda mobile-first com horários disponíveis em tempo real e confirmação rápida.",
+    title: "Horário em tempo real",
+    text: "Agenda sincronizada que mostra apenas os horários realmente disponíveis.",
     icon: CalendarDays,
   },
   {
-    title: "Confirme o atendimento",
-    text: "Login único para cliente e barbeiro, pronto para crescer com pagamentos e avaliações.",
+    title: "Confirmação automática",
+    text: "Reserva confirmada na hora e registrada no controle financeiro do barbeiro.",
     icon: ShieldCheck,
   },
 ];
@@ -74,7 +77,7 @@ const modeViews = {
     eyebrow: "Para você",
     title: "Agende em poucos toques",
     description:
-      "Encontre o serviço ideal, escolha o horário e confirme sua reserva de forma rápida e simples.",
+      "Encontre o serviço, escolha o horário e confirme sua reserva de forma rápida e simples.",
     bullets: [
       "Busca direta por serviço e horário",
       "Histórico de cortes e barbeiros favoritos",
@@ -84,36 +87,39 @@ const modeViews = {
   },
   barbeiro: {
     eyebrow: "Para profissionais",
-    title: "Gerencie sua agenda",
+    title: "Controle a agenda e o caixa",
     description:
-      "Controle seus horários, visualize clientes do dia e organize sua rotina de forma prática.",
+      "Gestão completa de horários, clientes e receitas em um só lugar, sem planilhas.",
     bullets: [
-      "Painel de horários disponíveis e bloqueios",
-      "Cadastro de serviços, duração e preço",
-      "Visão do dia com status de confirmação",
+      "Agenda do dia com confirmações e bloqueios",
+      "Registro automático de cada atendimento no caixa",
+      "Relatórios de faturamento por dia, semana e mês",
     ],
     cta: "Acessar painel",
   },
 } as const;
 
 const schedulePreview = [
-  { time: "09:00", client: "Matheus Lima", service: "Corte premium", status: "Confirmado" },
-  { time: "11:30", client: "Igor Santos", service: "Barba desenhada", status: "Lembrete enviado" },
-  { time: "15:00", client: "Rafael Cruz", service: "Combo urbano", status: "Aguardando" },
+  { time: "09:00", client: "Matheus Lima", service: "Corte premium", value: "R$ 45", status: "Confirmado" },
+  { time: "11:30", client: "Igor Santos", service: "Barba desenhada", value: "R$ 30", status: "Lembrete enviado" },
+  { time: "15:00", client: "Rafael Cruz", service: "Combo completo", value: "R$ 68", status: "Aguardando" },
 ];
 
-const studioHighlights = [
+const financeHighlights = [
   {
-    title: "Dark com identidade forte",
-    text: "Fundo profundo, contraste alto e brilho sutil para valorizar a marca sem exagero.",
+    title: "Caixa em tempo real",
+    text: "Cada atendimento concluído entra automaticamente no caixa do dia.",
+    icon: Wallet,
   },
   {
-    title: "Expansão pronta",
-    text: "Base organizada para pagamentos, avaliações, fidelidade e automações futuras.",
+    title: "Relatórios claros",
+    text: "Acompanhe faturamento, ticket médio e serviços mais procurados.",
+    icon: LineChart,
   },
   {
-    title: "Navegação intuitiva",
-    text: "Cliente agenda rápido. Barbeiro organiza a operação. Tudo com leitura clara no mobile.",
+    title: "Crescimento previsível",
+    text: "Veja a evolução por semana e mês para tomar decisões com dados.",
+    icon: TrendingUp,
   },
 ];
 
@@ -124,24 +130,24 @@ const Index = () => {
 
   return (
     <main className="app-shell overflow-hidden">
-      <section className="section-grid relative isolate border-b border-border/60">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,hsl(var(--foreground)/0.06),transparent_38%)]" aria-hidden="true" />
-        <div className="container relative py-5 sm:py-6 lg:py-8">
+      <section className="ambient-bg relative isolate border-b border-border/60">
+        <div className="container relative z-10 py-5 sm:py-6 lg:py-8">
           <header className="flex items-center justify-between gap-4 border-b border-border/60 pb-4 sm:pb-5">
             <a href="#home" className="flex items-center gap-3">
               <img src={logo} alt="Logo Izzy Barber" className="h-10 w-auto sm:h-12" />
               <div className="hidden sm:block">
                 <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Izzy Barber</p>
-                <p className="text-sm font-semibold text-foreground">Estilo urbano premium</p>
+                <p className="text-sm font-semibold text-foreground">Agenda &amp; gestão</p>
               </div>
             </a>
 
             <nav className="hidden items-center gap-6 md:flex">
               {[
-                ["Home", "home"],
+                ["Início", "home"],
                 ["Serviços", "servicos"],
                 ["Agendamento", "agendamento"],
-                ["Login", "login"],
+                ["Financeiro", "financeiro"],
+                ["Entrar", "login"],
               ].map(([label, target]) => (
                 <a key={target} href={`#${target}`} className="urban-link text-sm">
                   {label}
@@ -159,25 +165,25 @@ const Index = () => {
             </div>
           </header>
 
-          <div id="home" className="grid gap-8 py-10 sm:py-14 lg:grid-cols-[minmax(0,1.15fr)_24rem] lg:items-center lg:gap-10 lg:py-16 xl:py-20">
-            <div className="space-y-8 lg:space-y-10">
-              <div className="space-y-5 text-center lg:text-left">
-                <div className="space-y-4">
-                  <div className="relative">
-                    <div className="logo-stage mx-auto max-w-3xl lg:mx-0">
-                      <img src={logo} alt="Identidade visual Izzy Barber em estilo grafite" className="logo-mark w-full max-w-[42rem] shadow-md opacity-80" />
-                    </div>
-                  </div>
+          <div id="home" className="grid gap-10 py-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-center lg:gap-12 lg:py-20 xl:py-24">
+            <div className="space-y-10">
+              <div className="flex justify-center lg:justify-start">
+                <div className="logo-stage w-full max-w-2xl">
+                  <img
+                    src={logo}
+                    alt="Logo principal Izzy Barber"
+                    className="logo-mark mx-auto w-full max-w-[34rem]"
+                  />
                 </div>
+              </div>
 
-                <div className="mx-auto max-w-2xl space-y-4 lg:mx-0">
-                  <h1 className="text-balance text-4xl font-semibold leading-tight text-foreground sm:text-5xl lg:text-6xl">
-                    Izzy Barber com presença forte, visual exclusivo e uma vitrine urbana de alto padrão.
-                  </h1>
-                  <p className="max-w-xl text-sm leading-7 text-muted-foreground sm:text-base">
-                    A marca vira o centro da experiência: logo com respiro, contraste premium, navegação limpa e uma jornada intuitiva para agendar, entrar e gerenciar a agenda.
-                  </p>
-                </div>
+              <div className="mx-auto max-w-2xl space-y-5 text-center lg:mx-0 lg:text-left">
+                <h1 className="text-balance text-4xl font-semibold leading-tight text-foreground sm:text-5xl lg:text-6xl">
+                  A agenda e o caixa da sua barbearia em um só lugar.
+                </h1>
+                <p className="max-w-xl text-base leading-7 text-muted-foreground sm:text-lg lg:mx-0">
+                  Receba reservas online, controle horários, acompanhe o faturamento e mantenha seus clientes próximos com lembretes automáticos.
+                </p>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
@@ -186,7 +192,7 @@ const Index = () => {
                   <ArrowRight className="size-4" />
                 </Button>
                 <Button variant="outline" size="pill" className="sm:min-w-44">
-                  Explorar a Izzy
+                  Sou barbeiro
                 </Button>
               </div>
 
@@ -206,8 +212,8 @@ const Index = () => {
               <div className="glass-panel space-y-4 rounded-xl p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">agenda express</p>
-                    <h2 className="mt-2 text-2xl font-semibold text-foreground">Reserva com leitura clara no mobile</h2>
+                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">próximos horários</p>
+                    <h2 className="mt-2 text-2xl font-semibold text-foreground">Reserve em segundos</h2>
                   </div>
                   <Sparkles className="size-5 text-brand" />
                 </div>
@@ -216,7 +222,7 @@ const Index = () => {
                   {[
                     ["Corte premium", "Hoje · 19:30"],
                     ["Barba desenhada", "Amanhã · 10:00"],
-                    ["Combo urbano", "Amanhã · 13:20"],
+                    ["Combo completo", "Amanhã · 13:20"],
                   ].map(([service, slot]) => (
                     <div key={service} className="flex items-center justify-between gap-3 border-b border-border/40 pb-3 last:border-b-0 last:pb-0">
                       <div>
@@ -235,9 +241,9 @@ const Index = () => {
 
       <section id="servicos" className="container py-12 sm:py-16">
         <div className="mb-8 flex flex-col gap-3 sm:mb-10">
-          <span className="gold-chip w-fit">serviços em destaque</span>
+          <span className="gold-chip w-fit">serviços</span>
           <h2 className="max-w-2xl text-3xl font-semibold leading-tight text-foreground sm:text-4xl">
-            Poucos elementos, alto contraste e serviços apresentados com clareza.
+            Catálogo claro, preços transparentes, agendamento direto.
           </h2>
         </div>
 
@@ -269,12 +275,12 @@ const Index = () => {
       <section id="agendamento" className="container py-4 pb-12 sm:pb-16">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-start">
           <div className="space-y-4">
-            <span className="gold-chip">jornada de agendamento</span>
+            <span className="gold-chip">como funciona o agendamento</span>
             <h2 className="max-w-xl text-3xl font-semibold leading-tight text-foreground sm:text-4xl">
-              Um fluxo real para cliente reservar e barbeiro controlar horários sem esforço.
+              Do clique do cliente ao caixa do barbeiro, sem retrabalho.
             </h2>
             <p className="max-w-xl text-sm leading-7 text-muted-foreground sm:text-base">
-              A estrutura foi desenhada para parecer premium, carregar rápido e manter espaço negativo suficiente para a marca respirar.
+              Cada reserva confirmada já entra na agenda e no controle financeiro automaticamente.
             </p>
 
             <div className="space-y-3 pt-2">
@@ -326,24 +332,24 @@ const Index = () => {
         </div>
       </section>
 
-      <section className="container pb-12 sm:pb-16">
+      <section id="financeiro" className="container pb-12 sm:pb-16">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
           <div className="glass-panel rounded-xl p-5 sm:p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <span className="gold-chip">dashboard do barbeiro</span>
+                <span className="gold-chip">painel do barbeiro</span>
                 <h2 className="mt-4 text-3xl font-semibold leading-tight text-foreground sm:text-4xl">
-                  Gestão de horários com visual direto e leitura rápida.
+                  Agenda e caixa do dia em uma única tela.
                 </h2>
               </div>
-              <Store className="mt-1 size-5 text-brand" />
+              <CalendarCheck className="mt-1 size-5 text-brand" />
             </div>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               {[
-                ["Agendamentos hoje", "18"],
-                ["Clientes ativos", "124"],
-                ["Taxa de retorno", "87%"],
+                ["Atendimentos", "18"],
+                ["Faturado hoje", "R$ 1.240"],
+                ["Ticket médio", "R$ 69"],
               ].map(([label, value]) => (
                 <div key={label} className="metric-tile min-h-24">
                   <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
@@ -359,9 +365,15 @@ const Index = () => {
                     <p className="text-sm font-semibold text-foreground">{item.time} · {item.client}</p>
                     <p className="text-sm text-muted-foreground">{item.service}</p>
                   </div>
-                  <span className="w-fit rounded-full border border-border/70 bg-card px-3 py-1 text-xs uppercase tracking-[0.12em] text-foreground">
-                    {item.status}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="inline-flex items-center gap-1 text-sm font-semibold text-brand">
+                      <DollarSign className="size-4" />
+                      {item.value}
+                    </span>
+                    <span className="w-fit rounded-full border border-border/70 bg-card px-3 py-1 text-xs uppercase tracking-[0.12em] text-foreground">
+                      {item.status}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -371,20 +383,21 @@ const Index = () => {
             <div className="glass-panel rounded-xl p-5 sm:p-6">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <span className="gold-chip">integração futura</span>
-                  <h3 className="mt-4 text-2xl font-semibold text-foreground">Lembretes automáticos e expansão sem retrabalho.</h3>
+                  <span className="gold-chip">controle financeiro</span>
+                  <h3 className="mt-4 text-2xl font-semibold text-foreground">Cada corte vira receita registrada.</h3>
                 </div>
-                <BellRing className="mt-1 size-5 text-brand" />
+                <Wallet className="mt-1 size-5 text-brand" />
               </div>
-              <div className="mt-5 space-y-3">
-                {[
-                  "Confirmação no dia do atendimento",
-                  "Aviso uma hora antes com nome, serviço e horário",
-                  "Base pronta para conectar WhatsApp e pagamentos",
-                ].map((item) => (
-                  <div key={item} className="flex items-start gap-3">
-                    <span className="mt-2 size-2 rounded-full bg-brand" aria-hidden="true" />
-                    <p className="text-sm leading-7 text-muted-foreground">{item}</p>
+              <div className="mt-5 grid gap-3">
+                {financeHighlights.map((item) => (
+                  <div key={item.title} className="flex items-start gap-3 border-b border-border/40 pb-3 last:border-b-0 last:pb-0">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border/70 bg-secondary/70 text-foreground">
+                      <item.icon className="size-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{item.title}</p>
+                      <p className="mt-1 text-sm leading-7 text-muted-foreground">{item.text}</p>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -393,16 +406,20 @@ const Index = () => {
             <div className="glass-panel rounded-xl p-5 sm:p-6">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <span className="gold-chip">presença premium</span>
-                  <h3 className="mt-4 text-2xl font-semibold text-foreground">Design enxuto com clima urbano e resposta rápida.</h3>
+                  <span className="gold-chip">lembretes automáticos</span>
+                  <h3 className="mt-4 text-2xl font-semibold text-foreground">Menos faltas, mais faturamento.</h3>
                 </div>
-                <MapPin className="mt-1 size-5 text-brand" />
+                <BellRing className="mt-1 size-5 text-brand" />
               </div>
-              <div className="mt-5 grid gap-3">
-                {studioHighlights.map((item) => (
-                  <div key={item.title} className="border-b border-border/40 pb-3 last:border-b-0 last:pb-0">
-                    <p className="text-sm font-semibold text-foreground">{item.title}</p>
-                    <p className="mt-2 text-sm leading-7 text-muted-foreground">{item.text}</p>
+              <div className="mt-5 space-y-3">
+                {[
+                  "Confirmação no dia do atendimento",
+                  "Aviso 1 hora antes com nome, serviço e horário",
+                  "Pronto para integrar com WhatsApp e pagamentos",
+                ].map((item) => (
+                  <div key={item} className="flex items-start gap-3">
+                    <span className="mt-2 size-2 rounded-full bg-brand" aria-hidden="true" />
+                    <p className="text-sm leading-7 text-muted-foreground">{item}</p>
                   </div>
                 ))}
               </div>
@@ -415,20 +432,20 @@ const Index = () => {
         <div className="glass-panel rounded-xl px-5 py-6 text-center sm:px-8 sm:py-8">
           <span className="gold-chip mx-auto">izzy barber</span>
           <h2 className="mx-auto mt-4 max-w-3xl text-3xl font-semibold leading-tight text-foreground sm:text-4xl">
-            Uma plataforma moderna, exclusiva e pronta para conectar barbeiros e clientes de forma visualmente marcante.
+            A plataforma que organiza sua agenda, seus clientes e o caixa da barbearia.
           </h2>
           <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button variant="hero" size="pill">
               Começar agora
             </Button>
             <Button variant="outline" size="pill">
-              Ver fluxo completo
+              Ver painel do barbeiro
             </Button>
           </div>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
-            <span className="inline-flex items-center gap-2"><Clock3 className="size-4" /> Carregamento rápido</span>
+            <span className="inline-flex items-center gap-2"><Clock3 className="size-4" /> Agendamento em tempo real</span>
             <span className="inline-flex items-center gap-2"><UserRound className="size-4" /> Login para cliente e barbeiro</span>
-            <span className="inline-flex items-center gap-2"><Star className="size-4" /> Pronto para avaliações</span>
+            <span className="inline-flex items-center gap-2"><Star className="size-4" /> Controle financeiro integrado</span>
           </div>
         </div>
       </section>
