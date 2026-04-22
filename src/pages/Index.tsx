@@ -168,11 +168,11 @@ const Index = () => {
           <div id="home" className="grid gap-10 py-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-center lg:gap-12 lg:py-20 xl:py-24">
             <div className="space-y-10">
               <div className="flex justify-center lg:justify-start">
-                <div className="logo-stage w-full max-w-2xl">
+                <div className="logo-stage w-full max-w-[44rem]">
                   <img
                     src={logo}
                     alt="Logo principal Izzy Barber"
-                    className="logo-mark mx-auto w-full max-w-[34rem]"
+                    className="logo-mark mx-auto w-full max-w-[44rem]"
                   />
                 </div>
               </div>
