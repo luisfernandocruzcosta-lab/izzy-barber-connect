@@ -464,6 +464,58 @@ const Buscar = () => {
           </section>
         )}
       </div>
+
+      <Dialog open={!!pendingSlot} onOpenChange={(o) => !o && !booking && setPendingSlot(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmar agendamento</DialogTitle>
+            <DialogDescription>Revise os detalhes antes de confirmar.</DialogDescription>
+          </DialogHeader>
+
+          {pendingSlot && selectedService && selectedShop && (
+            <div className="space-y-3 rounded-xl border border-border/60 bg-card/60 p-4 text-sm">
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-muted-foreground">Barbearia</span>
+                <span className="text-right font-medium text-foreground">{selectedShop.name}</span>
+              </div>
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-muted-foreground">Serviço</span>
+                <span className="text-right font-medium text-foreground">
+                  {selectedService.name} · {selectedService.duration_minutes} min
+                </span>
+              </div>
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-muted-foreground">Barbeiro</span>
+                <span className="text-right font-medium text-foreground">
+                  {staff.find((s) => s.id === selectedStaffId)?.display_name ?? "—"}
+                </span>
+              </div>
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-muted-foreground">Data e hora</span>
+                <span className="text-right font-medium text-foreground">
+                  {format(pendingSlot, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                </span>
+              </div>
+              <div className="flex items-start justify-between gap-3 border-t border-border/60 pt-3">
+                <span className="text-muted-foreground">Total</span>
+                <span className="text-right text-base font-semibold text-brand">
+                  {formatPriceCents(selectedService.price_cents)}
+                </span>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setPendingSlot(null)} disabled={booking}>
+              Voltar
+            </Button>
+            <Button variant="hero" onClick={confirmBooking} disabled={booking}>
+              {booking && <Loader2 className="size-4 animate-spin" />}
+              Confirmar agendamento
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 };
