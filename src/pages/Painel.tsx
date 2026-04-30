@@ -60,12 +60,16 @@ type Appt = {
   starts_at: string;
   ends_at: string;
   status: string;
-  service: { name: string; price_cents: number } | null;
+  staff_id: string;
+  service_id: string;
+  service: { name: string; price_cents: number; duration_minutes: number } | null;
   staff: { display_name: string } | null;
-  client: { full_name: string | null } | null;
+  client: { full_name: string | null; phone: string | null } | null;
 };
 
 const WEEKDAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+
+type FinancePeriod = "today" | "week" | "month";
 
 const Painel = () => {
   const navigate = useNavigate();
