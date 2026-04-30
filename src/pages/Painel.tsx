@@ -797,6 +797,28 @@ const Painel = () => {
           </div>
         )}
       </div>
+
+      <RescheduleDialog
+        open={!!rescheduling}
+        onOpenChange={(o) => !o && setRescheduling(null)}
+        appointment={
+          rescheduling
+            ? {
+                id: rescheduling.id,
+                staff_id: rescheduling.staff_id,
+                service_id: rescheduling.service_id,
+                duration_minutes: rescheduling.service?.duration_minutes ?? 30,
+                starts_at: rescheduling.starts_at,
+              }
+            : null
+        }
+        onRescheduled={() => {
+          if (shop) {
+            void reloadAgenda(shop.id, agendaDate);
+            void reloadFinance(shop.id, financePeriod);
+          }
+        }}
+      />
     </main>
   );
 };
