@@ -493,37 +493,6 @@ const Painel = () => {
                   ) : (
                     <ul className="mt-4 space-y-2">
                       {agendaAppts.map((a) => (
-                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Concluídos</p>
-                  <p className="mt-2 text-2xl font-semibold text-foreground">{stats.completed}</p>
-                </div>
-                <div className="metric-tile">
-                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Faturado hoje</p>
-                  <p className="mt-2 text-2xl font-semibold text-foreground">{formatPriceCents(stats.revenue)}</p>
-                </div>
-              </div>
-            </section>
-
-            <Tabs defaultValue="agenda" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
-                <TabsTrigger value="agenda">Agenda</TabsTrigger>
-                <TabsTrigger value="equipe">Equipe</TabsTrigger>
-                <TabsTrigger value="servicos">Serviços</TabsTrigger>
-                <TabsTrigger value="horarios">Horários</TabsTrigger>
-              </TabsList>
-
-              {/* AGENDA DO DIA */}
-              <TabsContent value="agenda">
-                <div className="glass-panel rounded-2xl p-5 sm:p-6">
-                  <div className="flex items-center gap-3">
-                    <CalendarCheck className="size-5 text-brand" />
-                    <h2 className="text-xl font-semibold text-foreground">Agenda do dia · {formatDate(new Date())}</h2>
-                  </div>
-
-                  {todayAppts.length === 0 ? (
-                    <p className="mt-4 text-sm text-muted-foreground">Nenhum agendamento para hoje.</p>
-                  ) : (
-                    <ul className="mt-4 space-y-2">
-                      {todayAppts.map((a) => (
                         <li
                           key={a.id}
                           className="flex flex-col gap-3 rounded-xl border border-border/60 bg-card/60 p-4 sm:flex-row sm:items-center sm:justify-between"
