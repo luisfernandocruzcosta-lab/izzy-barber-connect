@@ -1,24 +1,33 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   CalendarCheck,
+  CalendarDays,
+  CalendarSync,
   CheckCircle2,
   Clock,
   DollarSign,
   Loader2,
   LogOut,
+  MessageCircle,
   Plus,
   Scissors,
   Store,
   Trash2,
+  TrendingUp,
   Users,
   XCircle,
 } from "lucide-react";
 
 import logo from "@/assets/izzy-barber-logo.png";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { RescheduleDialog } from "@/components/RescheduleDialog";
 import {
   Select,
   SelectContent,
@@ -32,6 +41,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, formatPriceCents, formatTime } from "@/lib/booking";
+import { openWhatsApp } from "@/lib/whatsapp";
+import { cn } from "@/lib/utils";
 
 type Shop = {
   id: string;
