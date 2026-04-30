@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RescheduleDialog } from "@/components/RescheduleDialog";
+import { StatusBadge } from "@/components/StatusBadge";
 import {
   Select,
   SelectContent,
@@ -501,9 +502,12 @@ const Painel = () => {
                             <p className="text-sm uppercase tracking-[0.12em] text-muted-foreground">
                               <Clock className="mr-1 inline size-3.5" /> {formatTime(a.starts_at)} – {formatTime(a.ends_at)}
                             </p>
-                            <p className="mt-1 text-base font-semibold text-foreground">
-                              {a.client?.full_name ?? "Cliente"}
-                            </p>
+                            <div className="mt-1 flex flex-wrap items-center gap-2">
+                              <p className="text-base font-semibold text-foreground">
+                                {a.client?.full_name ?? "Cliente"}
+                              </p>
+                              <StatusBadge status={a.status} />
+                            </div>
                             <p className="text-sm text-muted-foreground">
                               {a.service?.name ?? "Serviço"} · {a.staff?.display_name}
                             </p>
@@ -535,9 +539,7 @@ const Painel = () => {
                               </>
                             )}
                             {a.status !== "confirmed" && a.status !== "pending" && (
-                              <span className="rounded-full border border-border/70 bg-secondary px-3 py-1 text-xs uppercase tracking-[0.12em] text-foreground">
-                                {a.status}
-                              </span>
+                              <StatusBadge status={a.status} />
                             )}
                           </div>
                         </li>

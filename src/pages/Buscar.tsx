@@ -7,6 +7,14 @@ import { ptBR } from "date-fns/locale";
 import logo from "@/assets/izzy-barber-logo.png";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -65,6 +73,7 @@ const Buscar = () => {
   const [busy, setBusy] = useState<{ starts_at: string; ends_at: string }[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [booking, setBooking] = useState(false);
+  const [pendingSlot, setPendingSlot] = useState<Date | null>(null);
 
   // Carrega lista de barbearias
   useEffect(() => {
@@ -164,23 +173,28 @@ const Buscar = () => {
     return buildSlots(selectedDate, selectedService.duration_minutes, rules, busy);
   }, [selectedDate, selectedService, rules, busy]);
 
-  const handleBook = async (slot: Date) => {
+  const handleBook = (slot: Date) => {
     if (!session || !user) {
       toast({ title: "Faça login para agendar" });
       navigate("/auth");
       return;
     }
     if (!selectedShop || !selectedService || !selectedStaffId) return;
+    setPendingSlot(slot);
+  };
+
+  const confirmBooking = async () => {
+    if (!pendingSlot || !user || !selectedShop || !selectedService || !selectedStaffId) return;
 
     setBooking(true);
-    const ends = new Date(slot.getTime() + selectedService.duration_minutes * 60_000);
+    const ends = new Date(pendingSlot.getTime() + selectedService.duration_minutes * 60_000);
 
     const { error } = await supabase.from("appointments").insert({
       client_user_id: user.id,
       shop_id: selectedShop.id,
       staff_id: selectedStaffId,
       service_id: selectedService.id,
-      starts_at: slot.toISOString(),
+      starts_at: pendingSlot.toISOString(),
       ends_at: ends.toISOString(),
       status: "confirmed",
     });
@@ -192,16 +206,21 @@ const Buscar = () => {
     }
     toast({
       title: "Agendamento confirmado!",
-      description: `${selectedService.name} em ${format(slot, "dd/MM 'às' HH:mm")}`,
+      description: `${selectedService.name} em ${format(pendingSlot, "dd/MM 'às' HH:mm")}`,
     });
+    setPendingSlot(null);
 
     // Reload busy slots para refletir o novo agendamento
+    const dayStart = new Date(selectedDate);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(selectedDate);
+    dayEnd.setHours(23, 59, 59, 999);
     const refresh = await supabase
       .from("appointments")
       .select("starts_at, ends_at, status")
       .eq("staff_id", selectedStaffId)
-      .gte("starts_at", new Date(selectedDate.setHours(0, 0, 0, 0)).toISOString())
-      .lte("starts_at", new Date(selectedDate.setHours(23, 59, 59, 999)).toISOString());
+      .gte("starts_at", dayStart.toISOString())
+      .lte("starts_at", dayEnd.toISOString());
     setBusy(
       (refresh.data ?? [])
         .filter((a) => a.status !== "cancelled" && a.status !== "no_show")
@@ -445,6 +464,58 @@ const Buscar = () => {
           </section>
         )}
       </div>
+
+      <Dialog open={!!pendingSlot} onOpenChange={(o) => !o && !booking && setPendingSlot(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmar agendamento</DialogTitle>
+            <DialogDescription>Revise os detalhes antes de confirmar.</DialogDescription>
+          </DialogHeader>
+
+          {pendingSlot && selectedService && selectedShop && (
+            <div className="space-y-3 rounded-xl border border-border/60 bg-card/60 p-4 text-sm">
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-muted-foreground">Barbearia</span>
+                <span className="text-right font-medium text-foreground">{selectedShop.name}</span>
+              </div>
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-muted-foreground">Serviço</span>
+                <span className="text-right font-medium text-foreground">
+                  {selectedService.name} · {selectedService.duration_minutes} min
+                </span>
+              </div>
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-muted-foreground">Barbeiro</span>
+                <span className="text-right font-medium text-foreground">
+                  {staff.find((s) => s.id === selectedStaffId)?.display_name ?? "—"}
+                </span>
+              </div>
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-muted-foreground">Data e hora</span>
+                <span className="text-right font-medium text-foreground">
+                  {format(pendingSlot, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                </span>
+              </div>
+              <div className="flex items-start justify-between gap-3 border-t border-border/60 pt-3">
+                <span className="text-muted-foreground">Total</span>
+                <span className="text-right text-base font-semibold text-brand">
+                  {formatPriceCents(selectedService.price_cents)}
+                </span>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setPendingSlot(null)} disabled={booking}>
+              Voltar
+            </Button>
+            <Button variant="hero" onClick={confirmBooking} disabled={booking}>
+              {booking && <Loader2 className="size-4 animate-spin" />}
+              Confirmar agendamento
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 };
