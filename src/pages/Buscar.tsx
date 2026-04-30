@@ -73,6 +73,7 @@ const Buscar = () => {
   const [busy, setBusy] = useState<{ starts_at: string; ends_at: string }[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [booking, setBooking] = useState(false);
+  const [pendingSlot, setPendingSlot] = useState<Date | null>(null);
 
   // Carrega lista de barbearias
   useEffect(() => {
@@ -172,23 +173,28 @@ const Buscar = () => {
     return buildSlots(selectedDate, selectedService.duration_minutes, rules, busy);
   }, [selectedDate, selectedService, rules, busy]);
 
-  const handleBook = async (slot: Date) => {
+  const handleBook = (slot: Date) => {
     if (!session || !user) {
       toast({ title: "Faça login para agendar" });
       navigate("/auth");
       return;
     }
     if (!selectedShop || !selectedService || !selectedStaffId) return;
+    setPendingSlot(slot);
+  };
+
+  const confirmBooking = async () => {
+    if (!pendingSlot || !user || !selectedShop || !selectedService || !selectedStaffId) return;
 
     setBooking(true);
-    const ends = new Date(slot.getTime() + selectedService.duration_minutes * 60_000);
+    const ends = new Date(pendingSlot.getTime() + selectedService.duration_minutes * 60_000);
 
     const { error } = await supabase.from("appointments").insert({
       client_user_id: user.id,
       shop_id: selectedShop.id,
       staff_id: selectedStaffId,
       service_id: selectedService.id,
-      starts_at: slot.toISOString(),
+      starts_at: pendingSlot.toISOString(),
       ends_at: ends.toISOString(),
       status: "confirmed",
     });
@@ -200,16 +206,21 @@ const Buscar = () => {
     }
     toast({
       title: "Agendamento confirmado!",
-      description: `${selectedService.name} em ${format(slot, "dd/MM 'às' HH:mm")}`,
+      description: `${selectedService.name} em ${format(pendingSlot, "dd/MM 'às' HH:mm")}`,
     });
+    setPendingSlot(null);
 
     // Reload busy slots para refletir o novo agendamento
+    const dayStart = new Date(selectedDate);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(selectedDate);
+    dayEnd.setHours(23, 59, 59, 999);
     const refresh = await supabase
       .from("appointments")
       .select("starts_at, ends_at, status")
       .eq("staff_id", selectedStaffId)
-      .gte("starts_at", new Date(selectedDate.setHours(0, 0, 0, 0)).toISOString())
-      .lte("starts_at", new Date(selectedDate.setHours(23, 59, 59, 999)).toISOString());
+      .gte("starts_at", dayStart.toISOString())
+      .lte("starts_at", dayEnd.toISOString());
     setBusy(
       (refresh.data ?? [])
         .filter((a) => a.status !== "cancelled" && a.status !== "no_show")
