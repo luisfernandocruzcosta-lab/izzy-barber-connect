@@ -81,7 +81,12 @@ const Painel = () => {
   const [staff, setStaff] = useState<Staff[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [rules, setRules] = useState<Rule[]>([]);
-  const [todayAppts, setTodayAppts] = useState<Appt[]>([]);
+  const [agendaAppts, setAgendaAppts] = useState<Appt[]>([]);
+  const [financeAppts, setFinanceAppts] = useState<Appt[]>([]);
+
+  const [agendaDate, setAgendaDate] = useState<Date>(new Date());
+  const [financePeriod, setFinancePeriod] = useState<FinancePeriod>("today");
+  const [rescheduling, setRescheduling] = useState<Appt | null>(null);
 
   const [shopForm, setShopForm] = useState({ name: "", address: "", phone: "", description: "" });
   const [staffForm, setStaffForm] = useState({ display_name: "", bio: "" });
