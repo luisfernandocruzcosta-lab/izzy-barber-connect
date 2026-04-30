@@ -327,19 +327,51 @@ const Painel = () => {
     const { error } = await supabase.from("appointments").update({ status }).eq("id", id);
     if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
     toast({ title: status === "completed" ? "Atendimento concluído" : "Reserva cancelada" });
-    void loadAll();
+    if (shop) {
+      await Promise.all([reloadAgenda(shop.id, agendaDate), reloadFinance(shop.id, financePeriod)]);
+    }
   };
 
-  // ----- Métricas do dia -----
+  const sendWhatsAppReminder = (a: Appt) => {
+    if (!a.client?.phone) {
+      toast({
+        title: "Cliente sem telefone",
+        description: "Este cliente não tem telefone cadastrado no perfil.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const msg =
+      `Olá ${a.client.full_name ?? "cliente"}! Confirmando seu agendamento na ${shop?.name ?? "barbearia"}: ` +
+      `${a.service?.name ?? "serviço"} com ${a.staff?.display_name ?? ""} no dia ` +
+      `${formatDate(a.starts_at)} às ${formatTime(a.starts_at)}. Até lá! ✂️`;
+    openWhatsApp(a.client.phone, msg);
+  };
+
+  // ----- Métricas da agenda do dia selecionado -----
   const stats = useMemo(() => {
-    const completed = todayAppts.filter((a) => a.status === "completed");
+    const completed = agendaAppts.filter((a) => a.status === "completed");
     const revenue = completed.reduce((sum, a) => sum + (a.service?.price_cents ?? 0), 0);
     return {
-      total: todayAppts.filter((a) => a.status !== "cancelled").length,
+      total: agendaAppts.filter((a) => a.status !== "cancelled").length,
       completed: completed.length,
       revenue,
     };
-  }, [todayAppts]);
+  }, [agendaAppts]);
+
+  // ----- Métricas do financeiro (período) -----
+  const finance = useMemo(() => {
+    const completed = financeAppts.filter((a) => a.status === "completed");
+    const revenue = completed.reduce((sum, a) => sum + (a.service?.price_cents ?? 0), 0);
+    const ticket = completed.length > 0 ? Math.round(revenue / completed.length) : 0;
+    return { completed, revenue, ticket, count: completed.length };
+  }, [financeAppts]);
+
+  const periodLabel: Record<FinancePeriod, string> = {
+    today: "Hoje",
+    week: "Últimos 7 dias",
+    month: "Últimos 30 dias",
+  };
 
   if (authLoading || loading) {
     return (
