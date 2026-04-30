@@ -106,6 +106,56 @@ const Painel = () => {
     }
   }, [authLoading, user, isBarber, navigate, toast]);
 
+  const fetchAppts = async (shopId: string, from: Date, to: Date): Promise<Appt[]> => {
+    const { data } = await supabase
+      .from("appointments")
+      .select(
+        `id, starts_at, ends_at, status, staff_id, service_id, client_user_id,
+         service:services(name, price_cents, duration_minutes),
+         staff:shop_staff(display_name)`
+      )
+      .eq("shop_id", shopId)
+      .gte("starts_at", from.toISOString())
+      .lte("starts_at", to.toISOString())
+      .order("starts_at");
+
+    const raw = (data ?? []) as Array<Omit<Appt, "client"> & { client_user_id: string }>;
+    const clientIds = Array.from(new Set(raw.map((a) => a.client_user_id)));
+    let profilesMap: Record<string, { full_name: string | null; phone: string | null }> = {};
+    if (clientIds.length > 0) {
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("id, full_name, phone")
+        .in("id", clientIds);
+      profilesMap = Object.fromEntries(
+        (profilesData ?? []).map((p) => [p.id, { full_name: p.full_name, phone: p.phone }])
+      );
+    }
+    return raw.map((a) => ({
+      ...a,
+      client: profilesMap[a.client_user_id] ?? { full_name: null, phone: null },
+    }));
+  };
+
+  const reloadAgenda = async (shopId: string, date: Date) => {
+    const dayStart = new Date(date);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(date);
+    dayEnd.setHours(23, 59, 59, 999);
+    setAgendaAppts(await fetchAppts(shopId, dayStart, dayEnd));
+  };
+
+  const reloadFinance = async (shopId: string, period: FinancePeriod) => {
+    const now = new Date();
+    const from = new Date(now);
+    from.setHours(0, 0, 0, 0);
+    if (period === "week") from.setDate(from.getDate() - 6);
+    if (period === "month") from.setDate(from.getDate() - 29);
+    const to = new Date(now);
+    to.setHours(23, 59, 59, 999);
+    setFinanceAppts(await fetchAppts(shopId, from, to));
+  };
+
   const loadAll = async () => {
     if (!user) return;
     setLoading(true);
@@ -121,60 +171,27 @@ const Painel = () => {
       setStaff([]);
       setServices([]);
       setRules([]);
-      setTodayAppts([]);
+      setAgendaAppts([]);
+      setFinanceAppts([]);
       setLoading(false);
       return;
     }
 
     setShop(shopData);
 
-    const dayStart = new Date();
-    dayStart.setHours(0, 0, 0, 0);
-    const dayEnd = new Date();
-    dayEnd.setHours(23, 59, 59, 999);
-
-    const [staffRes, servicesRes, rulesRes, apptsRes] = await Promise.all([
+    const [staffRes, servicesRes] = await Promise.all([
       supabase.from("shop_staff").select("id, display_name, bio, is_bookable").eq("shop_id", shopData.id).order("created_at"),
       supabase.from("services").select("id, name, duration_minutes, price_cents, is_active").eq("shop_id", shopData.id).order("created_at"),
-      supabase
-        .from("availability_rules")
-        .select("id, staff_id, weekday, start_time, end_time, is_active")
-        .in("staff_id", []), // será refeito
-      supabase
-        .from("appointments")
-        .select(
-          `id, starts_at, ends_at, status, client_user_id,
-           service:services(name, price_cents),
-           staff:shop_staff(display_name)`
-        )
-        .eq("shop_id", shopData.id)
-        .gte("starts_at", dayStart.toISOString())
-        .lte("starts_at", dayEnd.toISOString())
-        .order("starts_at"),
     ]);
 
     setStaff(staffRes.data ?? []);
     setServices(servicesRes.data ?? []);
 
-    // Carrega nomes dos clientes em uma segunda query (sem FK definida)
-    const apptsRaw = (apptsRes.data ?? []) as Array<Appt & { client_user_id: string }>;
-    const clientIds = Array.from(new Set(apptsRaw.map((a) => a.client_user_id)));
-    let profilesMap: Record<string, string | null> = {};
-    if (clientIds.length > 0) {
-      const { data: profilesData } = await supabase
-        .from("profiles")
-        .select("id, full_name")
-        .in("id", clientIds);
-      profilesMap = Object.fromEntries((profilesData ?? []).map((p) => [p.id, p.full_name]));
-    }
-    setTodayAppts(
-      apptsRaw.map((a) => ({
-        ...a,
-        client: { full_name: profilesMap[a.client_user_id] ?? null },
-      }))
-    );
+    await Promise.all([
+      reloadAgenda(shopData.id, agendaDate),
+      reloadFinance(shopData.id, financePeriod),
+    ]);
 
-    // Busca regras de todos os staff da loja
     const staffIds = (staffRes.data ?? []).map((s) => s.id);
     if (staffIds.length > 0) {
       const { data: r } = await supabase
@@ -194,6 +211,18 @@ const Painel = () => {
     if (user && isBarber) void loadAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isBarber]);
+
+  // Recarregar agenda ao mudar a data
+  useEffect(() => {
+    if (shop) void reloadAgenda(shop.id, agendaDate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agendaDate]);
+
+  // Recarregar financeiro ao mudar o período
+  useEffect(() => {
+    if (shop) void reloadFinance(shop.id, financePeriod);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [financePeriod]);
 
   // ----- Handlers -----
   const handleCreateShop = async () => {
