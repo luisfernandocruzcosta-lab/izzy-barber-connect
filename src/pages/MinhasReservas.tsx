@@ -5,6 +5,7 @@ import { ArrowLeft, CalendarDays, CalendarSync, Loader2, Scissors, Store, X } fr
 import logo from "@/assets/izzy-barber-logo.png";
 import { Button } from "@/components/ui/button";
 import { RescheduleDialog } from "@/components/RescheduleDialog";
+import { StatusBadge } from "@/components/StatusBadge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,14 +21,6 @@ type Reservation = {
   service: { name: string; price_cents: number; duration_minutes: number } | null;
   shop: { name: string; address: string } | null;
   staff: { display_name: string } | null;
-};
-
-const statusLabel: Record<string, string> = {
-  pending: "Pendente",
-  confirmed: "Confirmado",
-  completed: "Concluído",
-  cancelled: "Cancelado",
-  no_show: "Não compareceu",
 };
 
 const MinhasReservas = () => {
@@ -146,9 +139,7 @@ const MinhasReservas = () => {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <span className="rounded-full border border-border/70 bg-card px-3 py-1 text-xs uppercase tracking-[0.12em] text-foreground">
-                        {statusLabel[r.status] ?? r.status}
-                      </span>
+                      <StatusBadge status={r.status} />
                       {r.service && (
                         <p className="mt-2 text-sm font-semibold text-brand">
                           {formatPriceCents(r.service.price_cents)}
