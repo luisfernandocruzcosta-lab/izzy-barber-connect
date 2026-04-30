@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, CalendarDays, Loader2, Scissors, Store, X } from "lucide-react";
+import { ArrowLeft, CalendarDays, CalendarSync, Loader2, Scissors, Store, X } from "lucide-react";
 
 import logo from "@/assets/izzy-barber-logo.png";
 import { Button } from "@/components/ui/button";
+import { RescheduleDialog } from "@/components/RescheduleDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +15,9 @@ type Reservation = {
   starts_at: string;
   ends_at: string;
   status: string;
-  service: { name: string; price_cents: number } | null;
+  staff_id: string;
+  service_id: string;
+  service: { name: string; price_cents: number; duration_minutes: number } | null;
   shop: { name: string; address: string } | null;
   staff: { display_name: string } | null;
 };
@@ -34,6 +37,7 @@ const MinhasReservas = () => {
 
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rescheduling, setRescheduling] = useState<Reservation | null>(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -48,8 +52,8 @@ const MinhasReservas = () => {
     const { data, error } = await supabase
       .from("appointments")
       .select(
-        `id, starts_at, ends_at, status,
-         service:services(name, price_cents),
+        `id, starts_at, ends_at, status, staff_id, service_id,
+         service:services(name, price_cents, duration_minutes),
          shop:barber_shops(name, address),
          staff:shop_staff(display_name)`
       )
@@ -152,9 +156,14 @@ const MinhasReservas = () => {
                       )}
                     </div>
                     {isUpcoming && (
-                      <Button variant="outline" size="sm" onClick={() => handleCancel(r.id)}>
-                        <X className="size-4" /> Cancelar
-                      </Button>
+                      <div className="flex flex-col gap-2 sm:flex-row">
+                        <Button variant="outline" size="sm" onClick={() => setRescheduling(r)}>
+                          <CalendarSync className="size-4" /> Reagendar
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleCancel(r.id)}>
+                          <X className="size-4" /> Cancelar
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </li>
@@ -163,6 +172,23 @@ const MinhasReservas = () => {
           </ul>
         )}
       </div>
+
+      <RescheduleDialog
+        open={!!rescheduling}
+        onOpenChange={(o) => !o && setRescheduling(null)}
+        appointment={
+          rescheduling
+            ? {
+                id: rescheduling.id,
+                staff_id: rescheduling.staff_id,
+                service_id: rescheduling.service_id,
+                duration_minutes: rescheduling.service?.duration_minutes ?? 30,
+                starts_at: rescheduling.starts_at,
+              }
+            : null
+        }
+        onRescheduled={() => void load()}
+      />
     </main>
   );
 };

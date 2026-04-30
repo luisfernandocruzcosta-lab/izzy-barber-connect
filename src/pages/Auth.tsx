@@ -28,6 +28,7 @@ const Auth = () => {
   const [mode, setMode] = useState<Mode>("sign-in");
   const [role, setRole] = useState<Role>("client");
   const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -66,17 +67,24 @@ const Auth = () => {
       return;
     }
 
-    // Se a barbearia foi escolhida, adiciona o papel "barber" ao novo usuário
-    if (role === "barber" && data.user) {
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .insert({ user_id: data.user.id, role: "barber" });
-      if (roleError) {
-        toast({
-          title: "Conta criada, mas o perfil de barbearia não foi liberado",
-          description: roleError.message,
-          variant: "destructive",
-        });
+    if (data.user) {
+      // Atualiza o profile com o telefone (o trigger handle_new_user já cria a linha)
+      if (phone) {
+        await supabase.from("profiles").update({ phone }).eq("id", data.user.id);
+      }
+
+      // Se a barbearia foi escolhida, adiciona o papel "barber" ao novo usuário
+      if (role === "barber") {
+        const { error: roleError } = await supabase
+          .from("user_roles")
+          .insert({ user_id: data.user.id, role: "barber" });
+        if (roleError) {
+          toast({
+            title: "Conta criada, mas o perfil de barbearia não foi liberado",
+            description: roleError.message,
+            variant: "destructive",
+          });
+        }
       }
     }
 
@@ -130,6 +138,20 @@ const Auth = () => {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Seu nome"
+                  className="rounded-xl bg-card"
+                />
+              </div>
+            )}
+
+            {mode === "sign-up" && (
+              <div className="space-y-2">
+                <Label htmlFor="phone">WhatsApp</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="(11) 91234-5678"
                   className="rounded-xl bg-card"
                 />
               </div>

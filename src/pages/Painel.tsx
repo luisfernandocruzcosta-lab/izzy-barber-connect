@@ -1,24 +1,33 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   CalendarCheck,
+  CalendarDays,
+  CalendarSync,
   CheckCircle2,
   Clock,
   DollarSign,
   Loader2,
   LogOut,
+  MessageCircle,
   Plus,
   Scissors,
   Store,
   Trash2,
+  TrendingUp,
   Users,
   XCircle,
 } from "lucide-react";
 
 import logo from "@/assets/izzy-barber-logo.png";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { RescheduleDialog } from "@/components/RescheduleDialog";
 import {
   Select,
   SelectContent,
@@ -32,6 +41,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, formatPriceCents, formatTime } from "@/lib/booking";
+import { openWhatsApp } from "@/lib/whatsapp";
+import { cn } from "@/lib/utils";
 
 type Shop = {
   id: string;
@@ -49,12 +60,16 @@ type Appt = {
   starts_at: string;
   ends_at: string;
   status: string;
-  service: { name: string; price_cents: number } | null;
+  staff_id: string;
+  service_id: string;
+  service: { name: string; price_cents: number; duration_minutes: number } | null;
   staff: { display_name: string } | null;
-  client: { full_name: string | null } | null;
+  client: { full_name: string | null; phone: string | null } | null;
 };
 
 const WEEKDAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+
+type FinancePeriod = "today" | "week" | "month";
 
 const Painel = () => {
   const navigate = useNavigate();
@@ -66,7 +81,12 @@ const Painel = () => {
   const [staff, setStaff] = useState<Staff[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [rules, setRules] = useState<Rule[]>([]);
-  const [todayAppts, setTodayAppts] = useState<Appt[]>([]);
+  const [agendaAppts, setAgendaAppts] = useState<Appt[]>([]);
+  const [financeAppts, setFinanceAppts] = useState<Appt[]>([]);
+
+  const [agendaDate, setAgendaDate] = useState<Date>(new Date());
+  const [financePeriod, setFinancePeriod] = useState<FinancePeriod>("today");
+  const [rescheduling, setRescheduling] = useState<Appt | null>(null);
 
   const [shopForm, setShopForm] = useState({ name: "", address: "", phone: "", description: "" });
   const [staffForm, setStaffForm] = useState({ display_name: "", bio: "" });
@@ -86,6 +106,56 @@ const Painel = () => {
     }
   }, [authLoading, user, isBarber, navigate, toast]);
 
+  const fetchAppts = async (shopId: string, from: Date, to: Date): Promise<Appt[]> => {
+    const { data } = await supabase
+      .from("appointments")
+      .select(
+        `id, starts_at, ends_at, status, staff_id, service_id, client_user_id,
+         service:services(name, price_cents, duration_minutes),
+         staff:shop_staff(display_name)`
+      )
+      .eq("shop_id", shopId)
+      .gte("starts_at", from.toISOString())
+      .lte("starts_at", to.toISOString())
+      .order("starts_at");
+
+    const raw = (data ?? []) as Array<Omit<Appt, "client"> & { client_user_id: string }>;
+    const clientIds = Array.from(new Set(raw.map((a) => a.client_user_id)));
+    let profilesMap: Record<string, { full_name: string | null; phone: string | null }> = {};
+    if (clientIds.length > 0) {
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("id, full_name, phone")
+        .in("id", clientIds);
+      profilesMap = Object.fromEntries(
+        (profilesData ?? []).map((p) => [p.id, { full_name: p.full_name, phone: p.phone }])
+      );
+    }
+    return raw.map((a) => ({
+      ...a,
+      client: profilesMap[a.client_user_id] ?? { full_name: null, phone: null },
+    }));
+  };
+
+  const reloadAgenda = async (shopId: string, date: Date) => {
+    const dayStart = new Date(date);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(date);
+    dayEnd.setHours(23, 59, 59, 999);
+    setAgendaAppts(await fetchAppts(shopId, dayStart, dayEnd));
+  };
+
+  const reloadFinance = async (shopId: string, period: FinancePeriod) => {
+    const now = new Date();
+    const from = new Date(now);
+    from.setHours(0, 0, 0, 0);
+    if (period === "week") from.setDate(from.getDate() - 6);
+    if (period === "month") from.setDate(from.getDate() - 29);
+    const to = new Date(now);
+    to.setHours(23, 59, 59, 999);
+    setFinanceAppts(await fetchAppts(shopId, from, to));
+  };
+
   const loadAll = async () => {
     if (!user) return;
     setLoading(true);
@@ -101,60 +171,27 @@ const Painel = () => {
       setStaff([]);
       setServices([]);
       setRules([]);
-      setTodayAppts([]);
+      setAgendaAppts([]);
+      setFinanceAppts([]);
       setLoading(false);
       return;
     }
 
     setShop(shopData);
 
-    const dayStart = new Date();
-    dayStart.setHours(0, 0, 0, 0);
-    const dayEnd = new Date();
-    dayEnd.setHours(23, 59, 59, 999);
-
-    const [staffRes, servicesRes, rulesRes, apptsRes] = await Promise.all([
+    const [staffRes, servicesRes] = await Promise.all([
       supabase.from("shop_staff").select("id, display_name, bio, is_bookable").eq("shop_id", shopData.id).order("created_at"),
       supabase.from("services").select("id, name, duration_minutes, price_cents, is_active").eq("shop_id", shopData.id).order("created_at"),
-      supabase
-        .from("availability_rules")
-        .select("id, staff_id, weekday, start_time, end_time, is_active")
-        .in("staff_id", []), // será refeito
-      supabase
-        .from("appointments")
-        .select(
-          `id, starts_at, ends_at, status, client_user_id,
-           service:services(name, price_cents),
-           staff:shop_staff(display_name)`
-        )
-        .eq("shop_id", shopData.id)
-        .gte("starts_at", dayStart.toISOString())
-        .lte("starts_at", dayEnd.toISOString())
-        .order("starts_at"),
     ]);
 
     setStaff(staffRes.data ?? []);
     setServices(servicesRes.data ?? []);
 
-    // Carrega nomes dos clientes em uma segunda query (sem FK definida)
-    const apptsRaw = (apptsRes.data ?? []) as Array<Appt & { client_user_id: string }>;
-    const clientIds = Array.from(new Set(apptsRaw.map((a) => a.client_user_id)));
-    let profilesMap: Record<string, string | null> = {};
-    if (clientIds.length > 0) {
-      const { data: profilesData } = await supabase
-        .from("profiles")
-        .select("id, full_name")
-        .in("id", clientIds);
-      profilesMap = Object.fromEntries((profilesData ?? []).map((p) => [p.id, p.full_name]));
-    }
-    setTodayAppts(
-      apptsRaw.map((a) => ({
-        ...a,
-        client: { full_name: profilesMap[a.client_user_id] ?? null },
-      }))
-    );
+    await Promise.all([
+      reloadAgenda(shopData.id, agendaDate),
+      reloadFinance(shopData.id, financePeriod),
+    ]);
 
-    // Busca regras de todos os staff da loja
     const staffIds = (staffRes.data ?? []).map((s) => s.id);
     if (staffIds.length > 0) {
       const { data: r } = await supabase
@@ -174,6 +211,18 @@ const Painel = () => {
     if (user && isBarber) void loadAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isBarber]);
+
+  // Recarregar agenda ao mudar a data
+  useEffect(() => {
+    if (shop) void reloadAgenda(shop.id, agendaDate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agendaDate]);
+
+  // Recarregar financeiro ao mudar o período
+  useEffect(() => {
+    if (shop) void reloadFinance(shop.id, financePeriod);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [financePeriod]);
 
   // ----- Handlers -----
   const handleCreateShop = async () => {
@@ -278,19 +327,51 @@ const Painel = () => {
     const { error } = await supabase.from("appointments").update({ status }).eq("id", id);
     if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
     toast({ title: status === "completed" ? "Atendimento concluído" : "Reserva cancelada" });
-    void loadAll();
+    if (shop) {
+      await Promise.all([reloadAgenda(shop.id, agendaDate), reloadFinance(shop.id, financePeriod)]);
+    }
   };
 
-  // ----- Métricas do dia -----
+  const sendWhatsAppReminder = (a: Appt) => {
+    if (!a.client?.phone) {
+      toast({
+        title: "Cliente sem telefone",
+        description: "Este cliente não tem telefone cadastrado no perfil.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const msg =
+      `Olá ${a.client.full_name ?? "cliente"}! Confirmando seu agendamento na ${shop?.name ?? "barbearia"}: ` +
+      `${a.service?.name ?? "serviço"} com ${a.staff?.display_name ?? ""} no dia ` +
+      `${formatDate(a.starts_at)} às ${formatTime(a.starts_at)}. Até lá! ✂️`;
+    openWhatsApp(a.client.phone, msg);
+  };
+
+  // ----- Métricas da agenda do dia selecionado -----
   const stats = useMemo(() => {
-    const completed = todayAppts.filter((a) => a.status === "completed");
+    const completed = agendaAppts.filter((a) => a.status === "completed");
     const revenue = completed.reduce((sum, a) => sum + (a.service?.price_cents ?? 0), 0);
     return {
-      total: todayAppts.filter((a) => a.status !== "cancelled").length,
+      total: agendaAppts.filter((a) => a.status !== "cancelled").length,
       completed: completed.length,
       revenue,
     };
-  }, [todayAppts]);
+  }, [agendaAppts]);
+
+  // ----- Métricas do financeiro (período) -----
+  const finance = useMemo(() => {
+    const completed = financeAppts.filter((a) => a.status === "completed");
+    const revenue = completed.reduce((sum, a) => sum + (a.service?.price_cents ?? 0), 0);
+    const ticket = completed.length > 0 ? Math.round(revenue / completed.length) : 0;
+    return { completed, revenue, ticket, count: completed.length };
+  }, [financeAppts]);
+
+  const periodLabel: Record<FinancePeriod, string> = {
+    today: "Hoje",
+    week: "Últimos 7 dias",
+    month: "Últimos 30 dias",
+  };
 
   if (authLoading || loading) {
     return (
@@ -357,7 +438,7 @@ const Painel = () => {
 
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
                 <div className="metric-tile">
-                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Agendamentos hoje</p>
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Agendamentos no dia</p>
                   <p className="mt-2 text-2xl font-semibold text-foreground">{stats.total}</p>
                 </div>
                 <div className="metric-tile">
@@ -365,33 +446,53 @@ const Painel = () => {
                   <p className="mt-2 text-2xl font-semibold text-foreground">{stats.completed}</p>
                 </div>
                 <div className="metric-tile">
-                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Faturado hoje</p>
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Faturado no dia</p>
                   <p className="mt-2 text-2xl font-semibold text-foreground">{formatPriceCents(stats.revenue)}</p>
                 </div>
               </div>
             </section>
 
             <Tabs defaultValue="agenda" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5">
                 <TabsTrigger value="agenda">Agenda</TabsTrigger>
+                <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
                 <TabsTrigger value="equipe">Equipe</TabsTrigger>
                 <TabsTrigger value="servicos">Serviços</TabsTrigger>
                 <TabsTrigger value="horarios">Horários</TabsTrigger>
               </TabsList>
 
-              {/* AGENDA DO DIA */}
+              {/* AGENDA */}
               <TabsContent value="agenda">
                 <div className="glass-panel rounded-2xl p-5 sm:p-6">
-                  <div className="flex items-center gap-3">
-                    <CalendarCheck className="size-5 text-brand" />
-                    <h2 className="text-xl font-semibold text-foreground">Agenda do dia · {formatDate(new Date())}</h2>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3">
+                      <CalendarCheck className="size-5 text-brand" />
+                      <h2 className="text-xl font-semibold text-foreground">Agenda</h2>
+                    </div>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="pill" className="bg-card">
+                          <CalendarDays className="size-4" />
+                          {format(agendaDate, "EEEE, dd 'de' MMM", { locale: ptBR })}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="end">
+                        <Calendar
+                          mode="single"
+                          selected={agendaDate}
+                          onSelect={(d) => d && setAgendaDate(d)}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
-                  {todayAppts.length === 0 ? (
-                    <p className="mt-4 text-sm text-muted-foreground">Nenhum agendamento para hoje.</p>
+                  {agendaAppts.length === 0 ? (
+                    <p className="mt-4 text-sm text-muted-foreground">Nenhum agendamento para esta data.</p>
                   ) : (
                     <ul className="mt-4 space-y-2">
-                      {todayAppts.map((a) => (
+                      {agendaAppts.map((a) => (
                         <li
                           key={a.id}
                           className="flex flex-col gap-3 rounded-xl border border-border/60 bg-card/60 p-4 sm:flex-row sm:items-center sm:justify-between"
@@ -407,21 +508,33 @@ const Painel = () => {
                               {a.service?.name ?? "Serviço"} · {a.staff?.display_name}
                             </p>
                           </div>
-                          <div className="flex items-center gap-3">
+                          <div className="flex flex-wrap items-center gap-2">
                             <span className="inline-flex items-center gap-1 text-sm font-semibold text-brand">
                               <DollarSign className="size-4" />
                               {formatPriceCents(a.service?.price_cents ?? 0)}
                             </span>
-                            {a.status === "confirmed" || a.status === "pending" ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => sendWhatsAppReminder(a)}
+                              title="Enviar mensagem no WhatsApp"
+                            >
+                              <MessageCircle className="size-4" />
+                            </Button>
+                            {(a.status === "confirmed" || a.status === "pending") && (
                               <>
+                                <Button size="sm" variant="outline" onClick={() => setRescheduling(a)}>
+                                  <CalendarSync className="size-4" />
+                                </Button>
                                 <Button size="sm" variant="hero" onClick={() => handleApptStatus(a.id, "completed")}>
                                   <CheckCircle2 className="size-4" /> Concluir
                                 </Button>
-                                <Button size="sm" variant="outline" onClick={() => handleApptStatus(a.id, "cancelled")}>
+                                <Button size="sm" variant="ghost" onClick={() => handleApptStatus(a.id, "cancelled")}>
                                   <XCircle className="size-4" />
                                 </Button>
                               </>
-                            ) : (
+                            )}
+                            {a.status !== "confirmed" && a.status !== "pending" && (
                               <span className="rounded-full border border-border/70 bg-secondary px-3 py-1 text-xs uppercase tracking-[0.12em] text-foreground">
                                 {a.status}
                               </span>
@@ -431,6 +544,81 @@ const Painel = () => {
                       ))}
                     </ul>
                   )}
+                </div>
+              </TabsContent>
+
+              {/* FINANCEIRO */}
+              <TabsContent value="financeiro">
+                <div className="glass-panel space-y-5 rounded-2xl p-5 sm:p-6">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3">
+                      <TrendingUp className="size-5 text-brand" />
+                      <h2 className="text-xl font-semibold text-foreground">Controle financeiro</h2>
+                    </div>
+                    <Select value={financePeriod} onValueChange={(v) => setFinancePeriod(v as FinancePeriod)}>
+                      <SelectTrigger className="w-full rounded-xl bg-card sm:w-56">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="today">Hoje</SelectItem>
+                        <SelectItem value="week">Últimos 7 dias</SelectItem>
+                        <SelectItem value="month">Últimos 30 dias</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="metric-tile">
+                      <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+                        Faturamento · {periodLabel[financePeriod]}
+                      </p>
+                      <p className="mt-2 text-2xl font-semibold text-foreground">
+                        {formatPriceCents(finance.revenue)}
+                      </p>
+                    </div>
+                    <div className="metric-tile">
+                      <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Atendimentos</p>
+                      <p className="mt-2 text-2xl font-semibold text-foreground">{finance.count}</p>
+                    </div>
+                    <div className="metric-tile">
+                      <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Ticket médio</p>
+                      <p className="mt-2 text-2xl font-semibold text-foreground">
+                        {formatPriceCents(finance.ticket)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="mb-2 text-sm uppercase tracking-[0.14em] text-muted-foreground">
+                      Atendimentos concluídos
+                    </h3>
+                    {finance.completed.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        Sem atendimentos concluídos no período.
+                      </p>
+                    ) : (
+                      <ul className="space-y-2">
+                        {finance.completed.map((a) => (
+                          <li
+                            key={a.id}
+                            className="flex flex-col gap-2 rounded-xl border border-border/60 bg-card/60 p-3 sm:flex-row sm:items-center sm:justify-between"
+                          >
+                            <div>
+                              <p className="text-sm font-semibold text-foreground">
+                                {a.client?.full_name ?? "Cliente"} · {a.service?.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {formatDate(a.starts_at)} {formatTime(a.starts_at)} · {a.staff?.display_name}
+                              </p>
+                            </div>
+                            <span className="text-sm font-semibold text-brand">
+                              {formatPriceCents(a.service?.price_cents ?? 0)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                 </div>
               </TabsContent>
 
@@ -609,6 +797,28 @@ const Painel = () => {
           </div>
         )}
       </div>
+
+      <RescheduleDialog
+        open={!!rescheduling}
+        onOpenChange={(o) => !o && setRescheduling(null)}
+        appointment={
+          rescheduling
+            ? {
+                id: rescheduling.id,
+                staff_id: rescheduling.staff_id,
+                service_id: rescheduling.service_id,
+                duration_minutes: rescheduling.service?.duration_minutes ?? 30,
+                starts_at: rescheduling.starts_at,
+              }
+            : null
+        }
+        onRescheduled={() => {
+          if (shop) {
+            void reloadAgenda(shop.id, agendaDate);
+            void reloadFinance(shop.id, financePeriod);
+          }
+        }}
+      />
     </main>
   );
 };
