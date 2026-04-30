@@ -438,10 +438,61 @@ const Painel = () => {
 
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
                 <div className="metric-tile">
-                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Agendamentos hoje</p>
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Agendamentos no dia</p>
                   <p className="mt-2 text-2xl font-semibold text-foreground">{stats.total}</p>
                 </div>
                 <div className="metric-tile">
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Concluídos</p>
+                  <p className="mt-2 text-2xl font-semibold text-foreground">{stats.completed}</p>
+                </div>
+                <div className="metric-tile">
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Faturado no dia</p>
+                  <p className="mt-2 text-2xl font-semibold text-foreground">{formatPriceCents(stats.revenue)}</p>
+                </div>
+              </div>
+            </section>
+
+            <Tabs defaultValue="agenda" className="space-y-4">
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5">
+                <TabsTrigger value="agenda">Agenda</TabsTrigger>
+                <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+                <TabsTrigger value="equipe">Equipe</TabsTrigger>
+                <TabsTrigger value="servicos">Serviços</TabsTrigger>
+                <TabsTrigger value="horarios">Horários</TabsTrigger>
+              </TabsList>
+
+              {/* AGENDA */}
+              <TabsContent value="agenda">
+                <div className="glass-panel rounded-2xl p-5 sm:p-6">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3">
+                      <CalendarCheck className="size-5 text-brand" />
+                      <h2 className="text-xl font-semibold text-foreground">Agenda</h2>
+                    </div>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="pill" className="bg-card">
+                          <CalendarDays className="size-4" />
+                          {format(agendaDate, "EEEE, dd 'de' MMM", { locale: ptBR })}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="end">
+                        <Calendar
+                          mode="single"
+                          selected={agendaDate}
+                          onSelect={(d) => d && setAgendaDate(d)}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  {agendaAppts.length === 0 ? (
+                    <p className="mt-4 text-sm text-muted-foreground">Nenhum agendamento para esta data.</p>
+                  ) : (
+                    <ul className="mt-4 space-y-2">
+                      {agendaAppts.map((a) => (
                   <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Concluídos</p>
                   <p className="mt-2 text-2xl font-semibold text-foreground">{stats.completed}</p>
                 </div>
