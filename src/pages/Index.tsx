@@ -18,6 +18,7 @@ import {
 import logo from "@/assets/izzy-barber-logo.png";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { NotificationsBell } from "@/components/NotificationsBell";
 
 const services = [
   { name: "Corte premium", time: "45 min", description: "Acabamento preciso e visual limpo, com agendamento em poucos toques." },
