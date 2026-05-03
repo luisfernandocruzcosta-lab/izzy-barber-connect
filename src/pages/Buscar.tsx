@@ -28,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { buildSlots, formatPriceCents, formatTime, type AvailabilityRule } from "@/lib/booking";
+import { openWhatsApp } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
 
 type Shop = {
