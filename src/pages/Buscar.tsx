@@ -37,6 +37,8 @@ type Shop = {
   address: string;
   phone: string | null;
   description: string | null;
+  rating?: number;
+  reviewCount?: number;
 };
 
 type Service = {
