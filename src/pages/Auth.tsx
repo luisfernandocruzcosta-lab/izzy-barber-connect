@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
-type Mode = "sign-in" | "sign-up";
+type Mode = "sign-in" | "sign-up" | "forgot";
 type Role = "client" | "barber";
 
 const Auth = () => {
@@ -38,6 +38,24 @@ const Auth = () => {
       navigate(isBarber ? "/painel" : "/", { replace: true });
     }
   }, [authLoading, session, isBarber, navigate]);
+
+  const handleForgot = async () => {
+    if (!email) {
+      toast({ title: "Informe o e-mail", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setLoading(false);
+    if (error) {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Verifique seu e-mail", description: "Enviamos o link para redefinir a senha." });
+    setMode("sign-in");
+  };
 
   const handleSignIn = async () => {
     setLoading(true);
