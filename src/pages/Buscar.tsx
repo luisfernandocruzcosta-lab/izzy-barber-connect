@@ -335,7 +335,15 @@ const Buscar = () => {
                     <div className="flex size-11 items-center justify-center rounded-full border border-border/70 bg-secondary/70">
                       <Store className="size-5 text-foreground" />
                     </div>
-                    <h3 className="text-xl font-semibold text-foreground">{s.name}</h3>
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-xl font-semibold text-foreground">{s.name}</h3>
+                      {s.rating && (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-card/70 px-2 py-0.5 text-xs font-semibold text-foreground">
+                          ★ {s.rating.toFixed(1)}
+                          <span className="text-muted-foreground">({s.reviewCount})</span>
+                        </span>
+                      )}
+                    </div>
                     <p className="inline-flex items-center gap-2 text-sm text-muted-foreground">
                       <MapPin className="size-4" /> {s.address}
                     </p>
