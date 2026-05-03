@@ -9,6 +9,8 @@ import Auth from "./pages/Auth.tsx";
 import Painel from "./pages/Painel.tsx";
 import Buscar from "./pages/Buscar.tsx";
 import MinhasReservas from "./pages/MinhasReservas.tsx";
+import Perfil from "./pages/Perfil.tsx";
+import ResetPassword from "./pages/ResetPassword.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -26,6 +28,8 @@ const App = () => (
             <Route path="/painel" element={<Painel />} />
             <Route path="/buscar" element={<Buscar />} />
             <Route path="/minhas-reservas" element={<MinhasReservas />} />
+            <Route path="/perfil" element={<Perfil />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

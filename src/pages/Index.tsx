@@ -18,6 +18,7 @@ import {
 import logo from "@/assets/izzy-barber-logo.png";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { NotificationsBell } from "@/components/NotificationsBell";
 
 const services = [
   { name: "Corte premium", time: "45 min", description: "Acabamento preciso e visual limpo, com agendamento em poucos toques." },
@@ -72,9 +73,17 @@ const Index = () => {
 
             <div className="flex items-center gap-2">
               {session ? (
-                <Button asChild variant="hero" size="pill">
-                  <Link to={isBarber ? "/painel" : "/"}>{isBarber ? "Painel" : "Conta"}</Link>
-                </Button>
+                <>
+                  <NotificationsBell />
+                  <Button asChild variant="outline" size="pill" className="hidden sm:inline-flex">
+                    <Link to="/perfil">Perfil</Link>
+                  </Button>
+                  <Button asChild variant="hero" size="pill">
+                    <Link to={isBarber ? "/painel" : "/minhas-reservas"}>
+                      {isBarber ? "Painel" : "Minhas reservas"}
+                    </Link>
+                  </Button>
+                </>
               ) : (
                 <>
                   <Button asChild variant="outline" size="pill" className="hidden sm:inline-flex">
