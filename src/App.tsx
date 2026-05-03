@@ -9,6 +9,8 @@ import Auth from "./pages/Auth.tsx";
 import Painel from "./pages/Painel.tsx";
 import Buscar from "./pages/Buscar.tsx";
 import MinhasReservas from "./pages/MinhasReservas.tsx";
+import Perfil from "./pages/Perfil.tsx";
+import ResetPassword from "./pages/ResetPassword.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
