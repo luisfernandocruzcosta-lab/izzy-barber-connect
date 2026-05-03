@@ -76,9 +76,10 @@ type FinancePeriod = "today" | "week" | "month";
 const Painel = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, isBarber, loading: authLoading, signOut } = useAuth();
+  const { user, isBarber, isAdmin, loading: authLoading, signOut } = useAuth();
 
   const [loading, setLoading] = useState(true);
+  const [shops, setShops] = useState<Shop[]>([]);
   const [shop, setShop] = useState<Shop | null>(null);
   const [staff, setStaff] = useState<Staff[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -158,27 +159,7 @@ const Painel = () => {
     setFinanceAppts(await fetchAppts(shopId, from, to));
   };
 
-  const loadAll = async () => {
-    if (!user) return;
-    setLoading(true);
-
-    const { data: shopData } = await supabase
-      .from("barber_shops")
-      .select("id, name, address, phone, description")
-      .eq("owner_user_id", user.id)
-      .maybeSingle();
-
-    if (!shopData) {
-      setShop(null);
-      setStaff([]);
-      setServices([]);
-      setRules([]);
-      setAgendaAppts([]);
-      setFinanceAppts([]);
-      setLoading(false);
-      return;
-    }
-
+  const loadShopDetails = async (shopData: Shop) => {
     setShop(shopData);
 
     const [staffRes, servicesRes] = await Promise.all([
@@ -206,13 +187,48 @@ const Painel = () => {
     }
 
     setRuleForm((prev) => ({ ...prev, staff_id: staffIds[0] ?? "" }));
+  };
+
+  const loadAll = async () => {
+    if (!user) return;
+    setLoading(true);
+
+    let query = supabase.from("barber_shops").select("id, name, address, phone, description").order("created_at");
+    if (!isAdmin) query = query.eq("owner_user_id", user.id);
+
+    const { data: shopList } = await query;
+    const list = (shopList ?? []) as Shop[];
+    setShops(list);
+
+    if (list.length === 0) {
+      setShop(null);
+      setStaff([]);
+      setServices([]);
+      setRules([]);
+      setAgendaAppts([]);
+      setFinanceAppts([]);
+      setLoading(false);
+      return;
+    }
+
+    // Mantém a barbearia atual se ainda existir, senão usa a primeira
+    const current = (shop && list.find((s) => s.id === shop.id)) || list[0];
+    await loadShopDetails(current);
+    setLoading(false);
+  };
+
+  const handleSelectShop = async (shopId: string) => {
+    const next = shops.find((s) => s.id === shopId);
+    if (!next) return;
+    setLoading(true);
+    await loadShopDetails(next);
     setLoading(false);
   };
 
   useEffect(() => {
     if (user && isBarber) void loadAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, isBarber]);
+  }, [user, isBarber, isAdmin]);
 
   // Recarregar agenda ao mudar a data
   useEffect(() => {
@@ -435,8 +451,31 @@ const Painel = () => {
         ) : (
           <div className="mt-8 space-y-6">
             <section>
-              <h1 className="text-3xl font-semibold text-foreground">{shop.name}</h1>
-              <p className="mt-1 text-sm text-muted-foreground">{shop.address}</p>
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <h1 className="text-3xl font-semibold text-foreground">{shop.name}</h1>
+                  <p className="mt-1 text-sm text-muted-foreground">{shop.address}</p>
+                </div>
+                {isAdmin && shops.length > 1 && (
+                  <div className="min-w-[240px] space-y-1">
+                    <Label className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+                      Barbearia (admin)
+                    </Label>
+                    <Select value={shop.id} onValueChange={handleSelectShop}>
+                      <SelectTrigger className="rounded-xl bg-card">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {shops.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>
+                            {s.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
 
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
                 <div className="metric-tile">
