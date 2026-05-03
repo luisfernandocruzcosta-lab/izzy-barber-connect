@@ -405,6 +405,42 @@ export type Database = {
           },
         ]
       }
+      shop_expenses: {
+        Row: {
+          amount_cents: number
+          category: Database["public"]["Enums"]["expense_category"]
+          created_at: string
+          created_by: string
+          description: string | null
+          expense_date: string
+          id: string
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          category?: Database["public"]["Enums"]["expense_category"]
+          created_at?: string
+          created_by: string
+          description?: string | null
+          expense_date?: string
+          id?: string
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          category?: Database["public"]["Enums"]["expense_category"]
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          expense_date?: string
+          id?: string
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       shop_staff: {
         Row: {
           bio: string | null
@@ -500,6 +536,14 @@ export type Database = {
         | "completed"
         | "cancelled"
         | "no_show"
+      expense_category:
+        | "produtos"
+        | "aluguel"
+        | "energia"
+        | "salarios"
+        | "marketing"
+        | "equipamentos"
+        | "outros"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -634,6 +678,15 @@ export const Constants = {
         "completed",
         "cancelled",
         "no_show",
+      ],
+      expense_category: [
+        "produtos",
+        "aluguel",
+        "energia",
+        "salarios",
+        "marketing",
+        "equipamentos",
+        "outros",
       ],
     },
   },
