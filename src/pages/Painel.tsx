@@ -76,9 +76,10 @@ type FinancePeriod = "today" | "week" | "month";
 const Painel = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, isBarber, loading: authLoading, signOut } = useAuth();
+  const { user, isBarber, isAdmin, loading: authLoading, signOut } = useAuth();
 
   const [loading, setLoading] = useState(true);
+  const [shops, setShops] = useState<Shop[]>([]);
   const [shop, setShop] = useState<Shop | null>(null);
   const [staff, setStaff] = useState<Staff[]>([]);
   const [services, setServices] = useState<Service[]>([]);
