@@ -28,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { buildSlots, formatPriceCents, formatTime, type AvailabilityRule } from "@/lib/booking";
+import { openWhatsApp } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
 
 type Shop = {
@@ -36,6 +37,8 @@ type Shop = {
   address: string;
   phone: string | null;
   description: string | null;
+  rating?: number;
+  reviewCount?: number;
 };
 
 type Service = {
@@ -86,7 +89,29 @@ const Buscar = () => {
       if (error) {
         toast({ title: "Erro ao carregar barbearias", description: error.message, variant: "destructive" });
       }
-      setShops(data ?? []);
+      const list = (data ?? []) as Shop[];
+      // Buscar ratings agregados
+      if (list.length > 0) {
+        const { data: revs } = await supabase
+          .from("reviews")
+          .select("shop_id, rating")
+          .in("shop_id", list.map((s) => s.id));
+        const agg: Record<string, { sum: number; count: number }> = {};
+        for (const r of revs ?? []) {
+          const cur = agg[r.shop_id] ?? { sum: 0, count: 0 };
+          cur.sum += r.rating;
+          cur.count += 1;
+          agg[r.shop_id] = cur;
+        }
+        for (const s of list) {
+          const a = agg[s.id];
+          if (a) {
+            s.rating = Math.round((a.sum / a.count) * 10) / 10;
+            s.reviewCount = a.count;
+          }
+        }
+      }
+      setShops(list);
       setLoadingShops(false);
     };
     void load();
@@ -204,9 +229,26 @@ const Buscar = () => {
       toast({ title: "Não foi possível agendar", description: error.message, variant: "destructive" });
       return;
     }
+    const startedAt = pendingSlot;
+    const shopPhone = selectedShop.phone;
+    const shopName = selectedShop.name;
+    const serviceName = selectedService.name;
     toast({
       title: "Agendamento confirmado!",
-      description: `${selectedService.name} em ${format(pendingSlot, "dd/MM 'às' HH:mm")}`,
+      description: `${serviceName} em ${format(startedAt, "dd/MM 'às' HH:mm")}`,
+      action: shopPhone ? (
+        <button
+          onClick={() =>
+            openWhatsApp(
+              shopPhone,
+              `Olá! Acabei de agendar ${serviceName} em ${shopName} para ${format(startedAt, "dd/MM 'às' HH:mm")}. Confirmando!`
+            )
+          }
+          className="rounded-full bg-brand px-3 py-1 text-xs font-semibold text-background"
+        >
+          Avisar no WhatsApp
+        </button>
+      ) : undefined,
     });
     setPendingSlot(null);
 
@@ -293,7 +335,15 @@ const Buscar = () => {
                     <div className="flex size-11 items-center justify-center rounded-full border border-border/70 bg-secondary/70">
                       <Store className="size-5 text-foreground" />
                     </div>
-                    <h3 className="text-xl font-semibold text-foreground">{s.name}</h3>
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-xl font-semibold text-foreground">{s.name}</h3>
+                      {s.rating && (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-card/70 px-2 py-0.5 text-xs font-semibold text-foreground">
+                          ★ {s.rating.toFixed(1)}
+                          <span className="text-muted-foreground">({s.reviewCount})</span>
+                        </span>
+                      )}
+                    </div>
                     <p className="inline-flex items-center gap-2 text-sm text-muted-foreground">
                       <MapPin className="size-4" /> {s.address}
                     </p>
