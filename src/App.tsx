@@ -28,6 +28,8 @@ const App = () => (
             <Route path="/painel" element={<Painel />} />
             <Route path="/buscar" element={<Buscar />} />
             <Route path="/minhas-reservas" element={<MinhasReservas />} />
+            <Route path="/perfil" element={<Perfil />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
