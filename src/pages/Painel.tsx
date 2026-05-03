@@ -552,76 +552,16 @@ const Painel = () => {
 
               {/* FINANCEIRO */}
               <TabsContent value="financeiro">
-                <div className="glass-panel space-y-5 rounded-2xl p-5 sm:p-6">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-3">
-                      <TrendingUp className="size-5 text-brand" />
-                      <h2 className="text-xl font-semibold text-foreground">Controle financeiro</h2>
-                    </div>
-                    <Select value={financePeriod} onValueChange={(v) => setFinancePeriod(v as FinancePeriod)}>
-                      <SelectTrigger className="w-full rounded-xl bg-card sm:w-56">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="today">Hoje</SelectItem>
-                        <SelectItem value="week">Últimos 7 dias</SelectItem>
-                        <SelectItem value="month">Últimos 30 dias</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <div className="metric-tile">
-                      <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
-                        Faturamento · {periodLabel[financePeriod]}
-                      </p>
-                      <p className="mt-2 text-2xl font-semibold text-foreground">
-                        {formatPriceCents(finance.revenue)}
-                      </p>
-                    </div>
-                    <div className="metric-tile">
-                      <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Atendimentos</p>
-                      <p className="mt-2 text-2xl font-semibold text-foreground">{finance.count}</p>
-                    </div>
-                    <div className="metric-tile">
-                      <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Ticket médio</p>
-                      <p className="mt-2 text-2xl font-semibold text-foreground">
-                        {formatPriceCents(finance.ticket)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="mb-2 text-sm uppercase tracking-[0.14em] text-muted-foreground">
-                      Atendimentos concluídos
-                    </h3>
-                    {finance.completed.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">
-                        Sem atendimentos concluídos no período.
-                      </p>
-                    ) : (
-                      <ul className="space-y-2">
-                        {finance.completed.map((a) => (
-                          <li
-                            key={a.id}
-                            className="flex flex-col gap-2 rounded-xl border border-border/60 bg-card/60 p-3 sm:flex-row sm:items-center sm:justify-between"
-                          >
-                            <div>
-                              <p className="text-sm font-semibold text-foreground">
-                                {a.client?.full_name ?? "Cliente"} · {a.service?.name}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {formatDate(a.starts_at)} {formatTime(a.starts_at)} · {a.staff?.display_name}
-                              </p>
-                            </div>
-                            <span className="text-sm font-semibold text-brand">
-                              {formatPriceCents(a.service?.price_cents ?? 0)}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+                <div className="glass-panel rounded-2xl p-5 sm:p-6">
+                  {user && (
+                    <FinanceTab
+                      shopId={shop.id}
+                      userId={user.id}
+                      appointments={financeAppts}
+                      period={financePeriod}
+                      onPeriodChange={setFinancePeriod}
+                    />
+                  )}
                 </div>
               </TabsContent>
 
