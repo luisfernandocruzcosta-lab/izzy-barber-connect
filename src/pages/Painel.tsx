@@ -159,27 +159,7 @@ const Painel = () => {
     setFinanceAppts(await fetchAppts(shopId, from, to));
   };
 
-  const loadAll = async () => {
-    if (!user) return;
-    setLoading(true);
-
-    const { data: shopData } = await supabase
-      .from("barber_shops")
-      .select("id, name, address, phone, description")
-      .eq("owner_user_id", user.id)
-      .maybeSingle();
-
-    if (!shopData) {
-      setShop(null);
-      setStaff([]);
-      setServices([]);
-      setRules([]);
-      setAgendaAppts([]);
-      setFinanceAppts([]);
-      setLoading(false);
-      return;
-    }
-
+  const loadShopDetails = async (shopData: Shop) => {
     setShop(shopData);
 
     const [staffRes, servicesRes] = await Promise.all([
@@ -207,13 +187,48 @@ const Painel = () => {
     }
 
     setRuleForm((prev) => ({ ...prev, staff_id: staffIds[0] ?? "" }));
+  };
+
+  const loadAll = async () => {
+    if (!user) return;
+    setLoading(true);
+
+    let query = supabase.from("barber_shops").select("id, name, address, phone, description").order("created_at");
+    if (!isAdmin) query = query.eq("owner_user_id", user.id);
+
+    const { data: shopList } = await query;
+    const list = (shopList ?? []) as Shop[];
+    setShops(list);
+
+    if (list.length === 0) {
+      setShop(null);
+      setStaff([]);
+      setServices([]);
+      setRules([]);
+      setAgendaAppts([]);
+      setFinanceAppts([]);
+      setLoading(false);
+      return;
+    }
+
+    // Mantém a barbearia atual se ainda existir, senão usa a primeira
+    const current = (shop && list.find((s) => s.id === shop.id)) || list[0];
+    await loadShopDetails(current);
+    setLoading(false);
+  };
+
+  const handleSelectShop = async (shopId: string) => {
+    const next = shops.find((s) => s.id === shopId);
+    if (!next) return;
+    setLoading(true);
+    await loadShopDetails(next);
     setLoading(false);
   };
 
   useEffect(() => {
     if (user && isBarber) void loadAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, isBarber]);
+  }, [user, isBarber, isAdmin]);
 
   // Recarregar agenda ao mudar a data
   useEffect(() => {
