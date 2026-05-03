@@ -204,9 +204,26 @@ const Buscar = () => {
       toast({ title: "Não foi possível agendar", description: error.message, variant: "destructive" });
       return;
     }
+    const startedAt = pendingSlot;
+    const shopPhone = selectedShop.phone;
+    const shopName = selectedShop.name;
+    const serviceName = selectedService.name;
     toast({
       title: "Agendamento confirmado!",
-      description: `${selectedService.name} em ${format(pendingSlot, "dd/MM 'às' HH:mm")}`,
+      description: `${serviceName} em ${format(startedAt, "dd/MM 'às' HH:mm")}`,
+      action: shopPhone ? (
+        <button
+          onClick={() =>
+            openWhatsApp(
+              shopPhone,
+              `Olá! Acabei de agendar ${serviceName} em ${shopName} para ${format(startedAt, "dd/MM 'às' HH:mm")}. Confirmando!`
+            )
+          }
+          className="rounded-full bg-brand px-3 py-1 text-xs font-semibold text-background"
+        >
+          Avisar no WhatsApp
+        </button>
+      ) : undefined,
     });
     setPendingSlot(null);
 
