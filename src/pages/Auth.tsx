@@ -187,17 +187,30 @@ const Auth = () => {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="rounded-xl bg-card"
-              />
-            </div>
+            {mode !== "forgot" && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Senha</Label>
+                  {mode === "sign-in" && (
+                    <button
+                      type="button"
+                      onClick={() => setMode("forgot")}
+                      className="text-xs text-muted-foreground underline hover:text-foreground"
+                    >
+                      Esqueci a senha
+                    </button>
+                  )}
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="rounded-xl bg-card"
+                />
+              </div>
+            )}
 
             {mode === "sign-up" && (
               <div className="space-y-2">
@@ -218,12 +231,29 @@ const Auth = () => {
               variant="hero"
               size="pill"
               className="w-full"
-              disabled={loading || !email || !password || (mode === "sign-up" && !fullName)}
-              onClick={mode === "sign-in" ? handleSignIn : handleSignUp}
+              disabled={
+                loading ||
+                !email ||
+                (mode !== "forgot" && !password) ||
+                (mode === "sign-up" && !fullName)
+              }
+              onClick={
+                mode === "sign-in" ? handleSignIn : mode === "sign-up" ? handleSignUp : handleForgot
+              }
             >
               {loading && <Loader2 className="size-4 animate-spin" />}
-              {mode === "sign-in" ? "Entrar" : "Criar conta"}
+              {mode === "sign-in" ? "Entrar" : mode === "sign-up" ? "Criar conta" : "Enviar link"}
             </Button>
+
+            {mode === "forgot" && (
+              <button
+                type="button"
+                onClick={() => setMode("sign-in")}
+                className="block w-full text-center text-xs text-muted-foreground underline hover:text-foreground"
+              >
+                Voltar para o login
+              </button>
+            )}
           </div>
         </div>
       </div>
