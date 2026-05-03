@@ -89,7 +89,29 @@ const Buscar = () => {
       if (error) {
         toast({ title: "Erro ao carregar barbearias", description: error.message, variant: "destructive" });
       }
-      setShops(data ?? []);
+      const list = (data ?? []) as Shop[];
+      // Buscar ratings agregados
+      if (list.length > 0) {
+        const { data: revs } = await supabase
+          .from("reviews")
+          .select("shop_id, rating")
+          .in("shop_id", list.map((s) => s.id));
+        const agg: Record<string, { sum: number; count: number }> = {};
+        for (const r of revs ?? []) {
+          const cur = agg[r.shop_id] ?? { sum: 0, count: 0 };
+          cur.sum += r.rating;
+          cur.count += 1;
+          agg[r.shop_id] = cur;
+        }
+        for (const s of list) {
+          const a = agg[s.id];
+          if (a) {
+            s.rating = Math.round((a.sum / a.count) * 10) / 10;
+            s.reviewCount = a.count;
+          }
+        }
+      }
+      setShops(list);
       setLoadingShops(false);
     };
     void load();
