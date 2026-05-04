@@ -50,7 +50,8 @@ const Auth = () => {
     });
     setLoading(false);
     if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      console.error("Reset password error:", error);
+      toast({ title: "Erro", description: "Não foi possível enviar o e-mail. Tente novamente.", variant: "destructive" });
       return;
     }
     toast({ title: "Verifique seu e-mail", description: "Enviamos o link para redefinir a senha." });
@@ -62,7 +63,8 @@ const Auth = () => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) {
-      toast({ title: "Falha no login", description: error.message, variant: "destructive" });
+      console.error("Sign in error:", error);
+      toast({ title: "Falha no login", description: "E-mail ou senha inválidos.", variant: "destructive" });
       return;
     }
     toast({ title: "Bem-vindo de volta" });
@@ -81,7 +83,11 @@ const Auth = () => {
 
     if (error) {
       setLoading(false);
-      toast({ title: "Falha no cadastro", description: error.message, variant: "destructive" });
+      console.error("Sign up error:", error);
+      const msg = error.message?.toLowerCase().includes("registered")
+        ? "Este e-mail já está em uso ou inválido."
+        : "Não foi possível concluir o cadastro. Verifique os dados e tente novamente.";
+      toast({ title: "Falha no cadastro", description: msg, variant: "destructive" });
       return;
     }
 
