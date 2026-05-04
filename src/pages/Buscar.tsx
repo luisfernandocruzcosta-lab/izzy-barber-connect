@@ -83,13 +83,13 @@ const Buscar = () => {
     const load = async () => {
       setLoadingShops(true);
       const { data, error } = await supabase
-        .from("barber_shops")
-        .select("id, name, address, phone, description")
+        .from("barber_shops_public" as any)
+        .select("id, name, address, description")
         .order("name");
       if (error) {
         toast({ title: "Erro ao carregar barbearias", description: error.message, variant: "destructive" });
       }
-      const list = (data ?? []) as Shop[];
+      const list = ((data ?? []) as unknown as Shop[]).map((s) => ({ ...s, phone: null }));
       // Buscar ratings agregados
       if (list.length > 0) {
         const { data: revs } = await supabase
