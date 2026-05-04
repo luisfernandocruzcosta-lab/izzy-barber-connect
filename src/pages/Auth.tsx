@@ -97,18 +97,13 @@ const Auth = () => {
         await supabase.from("profiles").update({ phone }).eq("id", data.user.id);
       }
 
-      // Se a barbearia foi escolhida, adiciona o papel "barber" ao novo usuário
+      // O papel "barber" deve ser concedido por um administrador no painel.
       if (role === "barber") {
-        const { error: roleError } = await supabase
-          .from("user_roles")
-          .insert({ user_id: data.user.id, role: "barber" });
-        if (roleError) {
-          toast({
-            title: "Conta criada, mas o perfil de barbearia não foi liberado",
-            description: roleError.message,
-            variant: "destructive",
-          });
-        }
+        toast({
+          title: "Conta criada",
+          description:
+            "Solicitação registrada. Um administrador precisa liberar o acesso de barbearia.",
+        });
       }
     }
 

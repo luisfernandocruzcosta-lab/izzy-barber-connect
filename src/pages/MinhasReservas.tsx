@@ -71,7 +71,7 @@ const MinhasReservas = () => {
       supabase.from("reviews").select("appointment_id").eq("client_user_id", user.id),
     ]);
 
-    if (resv.error) toast({ title: "Erro", description: resv.error.message, variant: "destructive" });
+    if (resv.error) toast({ title: "Erro", description: "Não foi possível concluir a operação. Tente novamente.", variant: "destructive" });
 
     setReservations((resv.data ?? []) as unknown as Reservation[]);
     setLoyalty((loy.data ?? []) as unknown as LoyaltyRow[]);
@@ -86,7 +86,7 @@ const MinhasReservas = () => {
 
   const handleCancel = async (id: string) => {
     const { error } = await supabase.from("appointments").update({ status: "cancelled" }).eq("id", id);
-    if (error) return toast({ title: "Erro ao cancelar", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: "Erro ao cancelar", description: "Não foi possível concluir a operação. Tente novamente.", variant: "destructive" });
     toast({ title: "Reserva cancelada" });
     void load();
   };

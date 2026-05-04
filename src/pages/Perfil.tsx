@@ -63,7 +63,7 @@ const Perfil = () => {
       .eq("id", user.id);
     setSaving(false);
     if (error) {
-      toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
+      toast({ title: "Erro ao salvar", description: "Não foi possível concluir a operação. Tente novamente.", variant: "destructive" });
       return;
     }
     toast({ title: "Perfil atualizado" });
@@ -78,7 +78,7 @@ const Perfil = () => {
     const { error } = await supabase.auth.updateUser({ password: pwd.next });
     setPwdSaving(false);
     if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      toast({ title: "Erro", description: "Não foi possível concluir a operação. Tente novamente.", variant: "destructive" });
       return;
     }
     toast({ title: "Senha alterada" });

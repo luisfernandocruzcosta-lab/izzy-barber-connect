@@ -94,7 +94,7 @@ export const RescheduleDialog = ({ open, onOpenChange, appointment, onReschedule
       .eq("id", appointment.id);
     setSaving(false);
     if (error) {
-      toast({ title: "Erro ao reagendar", description: error.message, variant: "destructive" });
+      toast({ title: "Erro ao reagendar", description: "Não foi possível concluir a operação. Tente novamente.", variant: "destructive" });
       return;
     }
     toast({ title: "Reagendado!", description: format(slot, "dd/MM 'às' HH:mm") });

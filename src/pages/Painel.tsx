@@ -259,7 +259,7 @@ const Painel = () => {
     });
     setSavingShop(false);
     if (error) {
-      toast({ title: "Erro ao cadastrar", description: error.message, variant: "destructive" });
+      toast({ title: "Erro ao cadastrar", description: "Não foi possível concluir a operação. Tente novamente.", variant: "destructive" });
       return;
     }
     toast({ title: "Barbearia cadastrada" });
@@ -275,7 +275,7 @@ const Painel = () => {
       display_name: staffForm.display_name,
       bio: staffForm.bio || null,
     });
-    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: "Erro", description: "Não foi possível concluir a operação. Tente novamente.", variant: "destructive" });
     toast({ title: "Barbeiro adicionado" });
     setStaffForm({ display_name: "", bio: "" });
     void loadAll();
@@ -283,7 +283,7 @@ const Painel = () => {
 
   const handleDeleteStaff = async (id: string) => {
     const { error } = await supabase.from("shop_staff").delete().eq("id", id);
-    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: "Erro", description: "Não foi possível concluir a operação. Tente novamente.", variant: "destructive" });
     toast({ title: "Barbeiro removido" });
     void loadAll();
   };
@@ -302,7 +302,7 @@ const Painel = () => {
       duration_minutes: duration,
       price_cents: Math.round(priceReais * 100),
     });
-    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: "Erro", description: "Não foi possível concluir a operação. Tente novamente.", variant: "destructive" });
     toast({ title: "Serviço adicionado" });
     setServiceForm({ name: "", duration: "30", price: "" });
     void loadAll();
@@ -310,7 +310,7 @@ const Painel = () => {
 
   const handleDeleteService = async (id: string) => {
     const { error } = await supabase.from("services").delete().eq("id", id);
-    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: "Erro", description: "Não foi possível concluir a operação. Tente novamente.", variant: "destructive" });
     toast({ title: "Serviço removido" });
     void loadAll();
   };
@@ -330,20 +330,20 @@ const Painel = () => {
       start_time: ruleForm.start,
       end_time: ruleForm.end,
     });
-    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: "Erro", description: "Não foi possível concluir a operação. Tente novamente.", variant: "destructive" });
     toast({ title: "Horário adicionado" });
     void loadAll();
   };
 
   const handleDeleteRule = async (id: string) => {
     const { error } = await supabase.from("availability_rules").delete().eq("id", id);
-    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: "Erro", description: "Não foi possível concluir a operação. Tente novamente.", variant: "destructive" });
     void loadAll();
   };
 
   const handleApptStatus = async (id: string, status: "completed" | "cancelled") => {
     const { error } = await supabase.from("appointments").update({ status }).eq("id", id);
-    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: "Erro", description: "Não foi possível concluir a operação. Tente novamente.", variant: "destructive" });
     toast({ title: status === "completed" ? "Atendimento concluído" : "Reserva cancelada" });
     if (shop) {
       await Promise.all([reloadAgenda(shop.id, agendaDate), reloadFinance(shop.id, financePeriod)]);
