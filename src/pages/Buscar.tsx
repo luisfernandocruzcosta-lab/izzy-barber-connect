@@ -83,8 +83,8 @@ const Buscar = () => {
     const load = async () => {
       setLoadingShops(true);
       const { data, error } = await supabase
-        .from("barber_shops")
-        .select("id, name, address, phone, description")
+        .from("barber_shops_public" as any)
+        .select("id, name, address, description")
         .order("name");
       if (error) {
         toast({ title: "Erro ao carregar barbearias", description: error.message, variant: "destructive" });
