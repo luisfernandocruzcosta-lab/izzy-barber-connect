@@ -76,6 +76,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "appointments_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "barber_shops_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "appointments_staff_id_fkey"
             columns: ["staff_id"]
             isOneToOne: false
@@ -226,6 +233,13 @@ export type Database = {
             referencedRelation: "barber_shops"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "loyalty_accounts_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "barber_shops_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       loyalty_transactions: {
@@ -353,6 +367,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "reviews_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "barber_shops_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "reviews_staff_id_fkey"
             columns: ["staff_id"]
             isOneToOne: false
@@ -401,6 +422,13 @@ export type Database = {
             columns: ["shop_id"]
             isOneToOne: false
             referencedRelation: "barber_shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "services_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "barber_shops_public"
             referencedColumns: ["id"]
           },
         ]
@@ -480,6 +508,13 @@ export type Database = {
             referencedRelation: "barber_shops"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "shop_staff_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "barber_shops_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_roles: {
@@ -505,7 +540,39 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      barber_shops_public: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          logo_url: string | null
+          name: string | null
+          owner_user_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          logo_url?: string | null
+          name?: string | null
+          owner_user_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          logo_url?: string | null
+          name?: string | null
+          owner_user_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
