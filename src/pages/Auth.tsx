@@ -50,7 +50,8 @@ const Auth = () => {
     });
     setLoading(false);
     if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      console.error("Reset password error:", error);
+      toast({ title: "Erro", description: "Não foi possível enviar o e-mail. Tente novamente.", variant: "destructive" });
       return;
     }
     toast({ title: "Verifique seu e-mail", description: "Enviamos o link para redefinir a senha." });
