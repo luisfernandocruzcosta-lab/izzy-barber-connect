@@ -87,7 +87,7 @@ const Buscar = () => {
         .select("id, name, address, description")
         .order("name");
       if (error) {
-        toast({ title: "Erro ao carregar barbearias", description: error.message, variant: "destructive" });
+        toast({ title: "Erro ao carregar barbearias", description: "Não foi possível concluir a operação. Tente novamente.", variant: "destructive" });
       }
       const list = ((data ?? []) as unknown as Shop[]).map((s) => ({ ...s, phone: null }));
       // Buscar ratings agregados
@@ -226,7 +226,7 @@ const Buscar = () => {
     setBooking(false);
 
     if (error) {
-      toast({ title: "Não foi possível agendar", description: error.message, variant: "destructive" });
+      toast({ title: "Não foi possível agendar", description: "Não foi possível concluir a operação. Tente novamente.", variant: "destructive" });
       return;
     }
     const startedAt = pendingSlot;

@@ -119,7 +119,7 @@ export const FinanceTab = ({ shopId, userId, appointments, period, onPeriodChang
       .lte("expense_date", periodRange.to.toISOString().slice(0, 10))
       .order("expense_date", { ascending: false });
     if (error) {
-      toast({ title: "Erro ao carregar despesas", description: error.message, variant: "destructive" });
+      toast({ title: "Erro ao carregar despesas", description: "Não foi possível concluir a operação. Tente novamente.", variant: "destructive" });
     }
     setExpenses((data ?? []) as Expense[]);
     setLoading(false);
@@ -145,7 +145,7 @@ export const FinanceTab = ({ shopId, userId, appointments, period, onPeriodChang
       expense_date: form.expense_date,
     });
     if (error) {
-      toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
+      toast({ title: "Erro ao salvar", description: "Não foi possível concluir a operação. Tente novamente.", variant: "destructive" });
       return;
     }
     toast({ title: "Despesa registrada" });
@@ -155,7 +155,7 @@ export const FinanceTab = ({ shopId, userId, appointments, period, onPeriodChang
 
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("shop_expenses").delete().eq("id", id);
-    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: "Erro", description: "Não foi possível concluir a operação. Tente novamente.", variant: "destructive" });
     void loadExpenses();
   };
 

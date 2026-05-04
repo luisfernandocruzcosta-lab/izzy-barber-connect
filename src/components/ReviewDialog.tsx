@@ -42,7 +42,7 @@ export const ReviewDialog = ({ open, onOpenChange, appointment, onSubmitted }: P
     });
     setLoading(false);
     if (error) {
-      toast({ title: "Erro ao enviar", description: error.message, variant: "destructive" });
+      toast({ title: "Erro ao enviar", description: "Não foi possível concluir a operação. Tente novamente.", variant: "destructive" });
       return;
     }
     toast({ title: "Avaliação enviada", description: "Obrigado pelo feedback!" });
