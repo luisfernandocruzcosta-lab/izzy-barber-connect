@@ -63,7 +63,8 @@ const Auth = () => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) {
-      toast({ title: "Falha no login", description: error.message, variant: "destructive" });
+      console.error("Sign in error:", error);
+      toast({ title: "Falha no login", description: "E-mail ou senha inválidos.", variant: "destructive" });
       return;
     }
     toast({ title: "Bem-vindo de volta" });
