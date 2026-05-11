@@ -173,20 +173,23 @@ const MinhasReservas = () => {
                       )}
                     </div>
                     <div className="flex flex-wrap justify-end gap-2">
-                      {r.shop?.phone && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            openWhatsApp(
-                              r.shop!.phone as string,
-                              `Olá! Quero falar sobre meu agendamento (${formatDate(r.starts_at)} ${formatTime(r.starts_at)}).`
-                            )
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          const { data: phone } = await (supabase.rpc as any)("get_shop_phone", { _shop_id: r.shop_id });
+                          if (!phone) {
+                            toast({ title: "Telefone indisponível", variant: "destructive" });
+                            return;
                           }
-                        >
-                          <MessageCircle className="size-4" />
-                        </Button>
-                      )}
+                          openWhatsApp(
+                            phone as string,
+                            `Olá! Quero falar sobre meu agendamento (${formatDate(r.starts_at)} ${formatTime(r.starts_at)}).`
+                          );
+                        }}
+                      >
+                        <MessageCircle className="size-4" />
+                      </Button>
                       {canReview && (
                         <Button variant="hero" size="sm" onClick={() => setReviewing(r)}>
                           <Star className="size-4" /> Avaliar
