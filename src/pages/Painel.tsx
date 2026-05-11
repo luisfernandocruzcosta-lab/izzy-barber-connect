@@ -193,7 +193,7 @@ const Painel = () => {
     if (!user) return;
     setLoading(true);
 
-    let query = supabase.from("barber_shops").select("id, name, address, phone, description").order("created_at");
+    let query = supabase.from("barber_shops").select("id, name, address, description").order("created_at");
     if (!isAdmin) query = query.eq("owner_user_id", user.id);
 
     const { data: shopList } = await query;

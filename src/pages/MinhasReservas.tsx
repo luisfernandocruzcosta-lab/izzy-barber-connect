@@ -59,7 +59,7 @@ const MinhasReservas = () => {
         .select(
           `id, starts_at, ends_at, status, staff_id, service_id, shop_id,
            service:services(name, price_cents, duration_minutes),
-           shop:barber_shops(name, address, phone),
+           shop:barber_shops(name, address),
            staff:shop_staff(display_name)`
         )
         .eq("client_user_id", user.id)

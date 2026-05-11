@@ -51,7 +51,7 @@ export const NotificationsBell = () => {
           `id, starts_at, status, shop_id, client_user_id,
            service:services(name, price_cents),
            staff:shop_staff(display_name),
-           shop:barber_shops(name, phone)`
+           shop:barber_shops(name)`
         )
         .in("shop_id", shopIds)
         .gte("starts_at", now.toISOString())
@@ -84,7 +84,7 @@ export const NotificationsBell = () => {
           `id, starts_at, status, shop_id,
            service:services(name, price_cents),
            staff:shop_staff(display_name),
-           shop:barber_shops(name, phone)`
+           shop:barber_shops(name)`
         )
         .eq("client_user_id", user.id)
         .gte("starts_at", now.toISOString())
