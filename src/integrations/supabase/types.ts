@@ -575,6 +575,7 @@ export type Database = {
       }
     }
     Functions: {
+      get_shop_phone: { Args: { _shop_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
