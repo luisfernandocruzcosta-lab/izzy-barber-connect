@@ -148,18 +148,24 @@ export const NotificationsBell = () => {
                     {a.staff?.display_name ? ` · ${a.staff.display_name}` : ""}
                   </p>
                   <div className="flex flex-wrap gap-2 pt-1">
-                    {(isBarber ? a.client_phone : a.shop?.phone) && (
+                    {(isBarber ? a.client_phone : true) && (
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() =>
+                        onClick={async () => {
+                          let phone: string | null = isBarber ? (a.client_phone ?? null) : null;
+                          if (!isBarber) {
+                            const { data } = await (supabase.rpc as any)("get_shop_phone", { _shop_id: a.shop_id });
+                            phone = (data as string | null) ?? null;
+                          }
+                          if (!phone) return;
                           openWhatsApp(
-                            (isBarber ? a.client_phone : a.shop?.phone) as string,
+                            phone,
                             isBarber
                               ? `Olá ${a.client_name ?? ""}! Lembrando do seu horário ${formatDate(a.starts_at)} às ${formatTime(a.starts_at)}.`
                               : `Olá! Estou confirmando meu horário em ${a.shop?.name} no dia ${formatDate(a.starts_at)} às ${formatTime(a.starts_at)}.`
-                          )
-                        }
+                          );
+                        }}
                       >
                         <MessageCircle className="size-3" /> WhatsApp
                       </Button>
