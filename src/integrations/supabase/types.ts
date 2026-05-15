@@ -575,6 +575,7 @@ export type Database = {
       }
     }
     Functions: {
+      claim_barber_role: { Args: never; Returns: undefined }
       get_shop_phone: { Args: { _shop_id: string }; Returns: string }
       has_role: {
         Args: {

@@ -61,12 +61,13 @@ const Auth = () => {
   const handleSignIn = async () => {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
     if (error) {
+      setLoading(false);
       console.error("Sign in error:", error);
       toast({ title: "Falha no login", description: "E-mail ou senha inválidos.", variant: "destructive" });
       return;
     }
+    setLoading(false);
     toast({ title: "Bem-vindo de volta" });
   };
 
@@ -76,7 +77,7 @@ const Auth = () => {
       email,
       password,
       options: {
-        data: { full_name: fullName },
+        data: { full_name: fullName, phone, requested_role: role },
         emailRedirectTo: `${window.location.origin}/painel`,
       },
     });
@@ -91,29 +92,22 @@ const Auth = () => {
       return;
     }
 
-    if (data.user) {
-      // Atualiza o profile com o telefone (o trigger handle_new_user já cria a linha)
-      if (phone) {
-        await supabase.from("profiles").update({ phone }).eq("id", data.user.id);
-      }
-
-      // O papel "barber" deve ser concedido por um administrador no painel.
-      if (role === "barber") {
-        toast({
-          title: "Conta criada",
-          description:
-            "Solicitação registrada. Um administrador precisa liberar o acesso de barbearia.",
-        });
-      }
+    // Caso o usuário já tenha sido autenticado (auto-confirm), garante o papel solicitado.
+    if (data.session && role === "barber") {
+      await supabase.rpc("claim_barber_role");
     }
 
     setLoading(false);
     toast({
       title: "Conta criada com sucesso",
-      description: "Você já pode entrar.",
+      description: data.session
+        ? "Tudo pronto, redirecionando…"
+        : "Verifique seu e-mail para confirmar o cadastro.",
     });
-    setMode("sign-in");
-    setPassword("");
+    if (!data.session) {
+      setMode("sign-in");
+      setPassword("");
+    }
   };
 
   return (
