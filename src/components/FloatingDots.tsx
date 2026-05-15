@@ -15,19 +15,19 @@ interface Dot {
 function buildDots(count: number): Dot[] {
   return Array.from({ length: count }, (_, i) => ({
     id: i,
-    size: Math.random() * 3 + 1,
+    size: Math.random() * 2 + 1,
     left: Math.random() * 100,
     top: Math.random() * 100,
-    duration: Math.random() * 20 + 15,
-    delay: Math.random() * -20,
-    driftX: (Math.random() - 0.5) * 30,
-    driftY: (Math.random() - 0.5) * 20,
-    opacity: Math.random() * 0.35 + 0.05,
+    duration: Math.random() * 25 + 18,
+    delay: Math.random() * -25,
+    driftX: (Math.random() - 0.5) * 25,
+    driftY: (Math.random() - 0.5) * 18,
+    opacity: Math.random() * 0.22 + 0.04,
   }));
 }
 
 const FloatingDots = () => {
-  const dots = useMemo(() => buildDots(35), []);
+  const dots = useMemo(() => buildDots(60), []);
 
   return (
     <div
@@ -37,14 +37,13 @@ const FloatingDots = () => {
       {dots.map((dot) => (
         <span
           key={dot.id}
-          className="absolute rounded-full"
+          className="absolute rounded-full bg-white"
           style={{
             width: dot.size,
             height: dot.size,
             left: `${dot.left}%`,
             top: `${dot.top}%`,
             opacity: dot.opacity,
-            backgroundColor: "hsl(var(--foreground))",
             animationName: `float-dot-${dot.id}`,
             animationDuration: `${dot.duration}s`,
             animationDelay: `${dot.delay}s`,
