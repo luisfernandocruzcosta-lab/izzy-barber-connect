@@ -23,7 +23,7 @@ type Role = "client" | "barber";
 const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { session, isBarber, loading: authLoading } = useAuth();
+  const { session, homePath, loading: authLoading } = useAuth();
 
   const [mode, setMode] = useState<Mode>("sign-in");
   const [role, setRole] = useState<Role>("client");
@@ -35,9 +35,9 @@ const Auth = () => {
 
   useEffect(() => {
     if (!authLoading && session) {
-      navigate(isBarber ? "/painel" : "/", { replace: true });
+      navigate(homePath, { replace: true });
     }
-  }, [authLoading, session, isBarber, navigate]);
+  }, [authLoading, session, homePath, navigate]);
 
   const handleForgot = async () => {
     if (!email) {

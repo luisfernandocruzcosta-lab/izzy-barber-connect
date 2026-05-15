@@ -11,6 +11,8 @@ interface AuthContextValue {
   loading: boolean;
   isBarber: boolean;
   isAdmin: boolean;
+  isClient: boolean;
+  homePath: string;
   signOut: () => Promise<void>;
 }
 
@@ -60,6 +62,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loading,
     isBarber: roles.includes("barber") || roles.includes("admin"),
     isAdmin: roles.includes("admin"),
+    isClient: roles.includes("client") && !roles.includes("barber") && !roles.includes("admin"),
+    homePath: roles.includes("admin")
+      ? "/admin"
+      : roles.includes("barber")
+        ? "/painel"
+        : "/minhas-reservas",
     signOut,
   };
 
