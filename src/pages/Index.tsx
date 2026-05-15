@@ -40,10 +40,16 @@ const financeHighlights = [
 ];
 
 const Index = () => {
-  const { session, isBarber } = useAuth();
+  const { session, isBarber, isAdmin, homePath } = useAuth();
 
-  const primaryHref = session ? (isBarber ? "/painel" : "/buscar") : "/buscar";
-  const primaryLabel = session ? (isBarber ? "Abrir meu painel" : "Agendar agora") : "Buscar barbearias";
+  const primaryHref = session ? homePath : "/buscar";
+  const primaryLabel = session
+    ? isAdmin
+      ? "Abrir painel admin"
+      : isBarber
+        ? "Abrir meu painel"
+        : "Minhas reservas"
+    : "Buscar barbearias";
 
   return (
     <main className="app-shell overflow-hidden">
