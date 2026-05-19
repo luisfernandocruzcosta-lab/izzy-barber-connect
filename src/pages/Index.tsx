@@ -106,18 +106,18 @@ const Index = () => {
             </div>
           </header>
 
-          <Card className="relative mt-8 w-full overflow-hidden border-border/60 bg-black/[0.96] shadow-panel md:h-[480px]">
+          <Card className="relative mt-6 w-full overflow-hidden border-border/60 bg-black/[0.96] shadow-panel sm:mt-8 md:h-[480px]">
             <Spotlight className="-top-40 left-0 md:-top-20 md:left-60" fill="white" />
             <div className="flex h-full flex-col md:flex-row">
-              <div className="relative z-10 flex flex-1 flex-col justify-center p-8 md:p-12">
+              <div className="relative z-10 flex flex-1 flex-col justify-center p-6 sm:p-8 md:p-12">
                 <span className="gold-chip w-fit">experiência 3D</span>
-                <h2 className="mt-4 bg-gradient-to-b from-foreground to-foreground/50 bg-clip-text text-4xl font-semibold leading-tight text-transparent sm:text-5xl">
+                <h2 className="mt-4 bg-gradient-to-b from-foreground to-foreground/50 bg-clip-text text-3xl font-semibold leading-tight text-transparent sm:text-4xl lg:text-5xl">
                   Sua barbearia em movimento.
                 </h2>
-                <p className="mt-4 max-w-md text-sm leading-7 text-muted-foreground sm:text-base">
+                <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground sm:mt-4 sm:text-base sm:leading-7">
                   Uma plataforma viva: agenda, clientes e caixa girando em torno do seu negócio em tempo real.
                 </p>
-                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <div className="mt-5 flex flex-col gap-3 sm:mt-6 sm:flex-row">
                   <Button asChild variant="hero" size="pill">
                     <Link to={primaryHref}>
                       {primaryLabel}
@@ -129,7 +129,7 @@ const Index = () => {
                   </Button>
                 </div>
               </div>
-              <div className="relative h-[280px] w-full md:h-auto md:flex-1">
+              <div className="relative hidden h-[280px] w-full md:block md:h-auto md:flex-1">
                 <SplineScene
                   scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
                   className="h-full w-full"
