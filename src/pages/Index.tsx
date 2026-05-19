@@ -78,6 +78,16 @@ const Index = () => {
                   {label}
                 </a>
               ))}
+              <Link
+                to="/demo"
+                className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-sm font-medium text-brand ring-1 ring-brand/20 transition-colors hover:bg-brand/20"
+              >
+                Demo
+                <span className="relative flex size-2">
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-brand opacity-75" />
+                  <span className="relative inline-flex size-2 rounded-full bg-brand" />
+                </span>
+              </Link>
             </nav>
 
             <div className="flex items-center gap-2">
