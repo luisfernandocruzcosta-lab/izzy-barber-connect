@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface Dot {
   id: number;
@@ -27,7 +27,21 @@ function buildDots(count: number): Dot[] {
 }
 
 const FloatingDots = () => {
-  const dots = useMemo(() => buildDots(60), []);
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) {
+      setCount(0);
+      return;
+    }
+    setCount(isMobile ? 20 : 45);
+  }, []);
+
+  const dots = useMemo(() => buildDots(count), [count]);
+
+  if (!count) return null;
 
   return (
     <div
@@ -37,37 +51,34 @@ const FloatingDots = () => {
       {dots.map((dot) => (
         <span
           key={dot.id}
-          className="absolute rounded-full bg-white"
-          style={{
-            width: dot.size,
-            height: dot.size,
-            left: `${dot.left}%`,
-            top: `${dot.top}%`,
-            opacity: dot.opacity,
-            animationName: `float-dot-${dot.id}`,
-            animationDuration: `${dot.duration}s`,
-            animationDelay: `${dot.delay}s`,
-            animationTimingFunction: "ease-in-out",
-            animationIterationCount: "infinite",
-            animationDirection: "alternate",
-          }}
+          className="absolute rounded-full bg-white floating-dot"
+          style={
+            {
+              width: dot.size,
+              height: dot.size,
+              left: `${dot.left}%`,
+              top: `${dot.top}%`,
+              opacity: dot.opacity,
+              animationDuration: `${dot.duration}s`,
+              animationDelay: `${dot.delay}s`,
+              ["--dx" as string]: `${dot.driftX}px`,
+              ["--dy" as string]: `${dot.driftY}px`,
+            } as React.CSSProperties
+          }
         />
       ))}
       <style>{`
-        ${dots
-          .map(
-            (dot) => `
-          @keyframes float-dot-${dot.id} {
-            0% {
-              transform: translate(0, 0);
-            }
-            100% {
-              transform: translate(${dot.driftX}px, ${dot.driftY}px);
-            }
-          }
-        `
-          )
-          .join("\n")}
+        @keyframes float-dot {
+          0% { transform: translate3d(0, 0, 0); }
+          100% { transform: translate3d(var(--dx), var(--dy), 0); }
+        }
+        .floating-dot {
+          animation-name: float-dot;
+          animation-timing-function: ease-in-out;
+          animation-iteration-count: infinite;
+          animation-direction: alternate;
+          will-change: transform;
+        }
       `}</style>
     </div>
   );
