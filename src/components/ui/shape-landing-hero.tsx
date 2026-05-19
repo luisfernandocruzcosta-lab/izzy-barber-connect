@@ -67,9 +67,9 @@ export function HeroGeometric({
     visible: (i: number) => ({
       opacity: 1,
       y: 0,
-      transition: { duration: 1, delay: 0.5 + i * 0.2, ease: [0.25, 0.4, 0.25, 1] },
+      transition: { duration: 1, delay: 0.5 + i * 0.2, ease: [0.25, 0.4, 0.25, 1] as const },
     }),
-  };
+  } as const;
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-[#030303]">
