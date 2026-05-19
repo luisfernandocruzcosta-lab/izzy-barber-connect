@@ -139,7 +139,7 @@ const Index = () => {
                   </Button>
                 </div>
               </div>
-              <div className="relative hidden h-[280px] w-full md:block md:h-auto md:flex-1">
+              <div className="relative h-[260px] w-full sm:h-[320px] md:h-auto md:flex-1">
                 <SplineScene
                   scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
                   className="h-full w-full"
