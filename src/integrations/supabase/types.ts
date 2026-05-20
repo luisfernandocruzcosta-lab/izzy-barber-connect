@@ -91,6 +91,42 @@ export type Database = {
           },
         ]
       }
+      audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          id: number
+          new_data: Json | null
+          old_data: Json | null
+          record_id: string | null
+          shop_id: string | null
+          table_name: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          id?: number
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          shop_id?: string | null
+          table_name: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          id?: number
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          shop_id?: string | null
+          table_name?: string
+        }
+        Relationships: []
+      }
       availability_rules: {
         Row: {
           created_at: string
@@ -284,6 +320,51 @@ export type Database = {
           },
         ]
       }
+      payments: {
+        Row: {
+          amount_cents: number
+          appointment_id: string
+          client_user_id: string
+          created_at: string
+          id: string
+          method: Database["public"]["Enums"]["payment_method"]
+          notes: string | null
+          paid_at: string | null
+          recorded_by: string
+          shop_id: string
+          status: Database["public"]["Enums"]["payment_status"]
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          appointment_id: string
+          client_user_id: string
+          created_at?: string
+          id?: string
+          method?: Database["public"]["Enums"]["payment_method"]
+          notes?: string | null
+          paid_at?: string | null
+          recorded_by: string
+          shop_id: string
+          status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          appointment_id?: string
+          client_user_id?: string
+          created_at?: string
+          id?: string
+          method?: Database["public"]["Enums"]["payment_method"]
+          notes?: string | null
+          paid_at?: string | null
+          recorded_by?: string
+          shop_id?: string
+          status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -469,6 +550,42 @@ export type Database = {
         }
         Relationships: []
       }
+      shop_settings: {
+        Row: {
+          auto_confirm: boolean
+          cancel_window_minutes: number
+          created_at: string
+          currency: string
+          id: string
+          min_advance_minutes: number
+          shop_id: string
+          slot_interval_minutes: number
+          updated_at: string
+        }
+        Insert: {
+          auto_confirm?: boolean
+          cancel_window_minutes?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          min_advance_minutes?: number
+          shop_id: string
+          slot_interval_minutes?: number
+          updated_at?: string
+        }
+        Update: {
+          auto_confirm?: boolean
+          cancel_window_minutes?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          min_advance_minutes?: number
+          shop_id?: string
+          slot_interval_minutes?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       shop_staff: {
         Row: {
           bio: string | null
@@ -575,7 +692,38 @@ export type Database = {
       }
     }
     Functions: {
+      cancel_appointment: {
+        Args: { _appointment_id: string; _reason?: string }
+        Returns: {
+          client_user_id: string
+          created_at: string
+          ends_at: string
+          id: string
+          notes: string | null
+          reminder_day_sent_at: string | null
+          reminder_one_hour_sent_at: string | null
+          service_id: string
+          shop_id: string
+          staff_id: string
+          starts_at: string
+          status: Database["public"]["Enums"]["appointment_status"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "appointments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       claim_barber_role: { Args: never; Returns: undefined }
+      get_available_slots: {
+        Args: { _date: string; _service_id: string; _staff_id: string }
+        Returns: {
+          slot_end: string
+          slot_start: string
+        }[]
+      }
       get_shop_phone: { Args: { _shop_id: string }; Returns: string }
       has_role: {
         Args: {
@@ -596,6 +744,30 @@ export type Database = {
         Args: { _staff_id: string; _user_id: string }
         Returns: boolean
       }
+      reschedule_appointment: {
+        Args: { _appointment_id: string; _new_start: string }
+        Returns: {
+          client_user_id: string
+          created_at: string
+          ends_at: string
+          id: string
+          notes: string | null
+          reminder_day_sent_at: string | null
+          reminder_one_hour_sent_at: string | null
+          service_id: string
+          shop_id: string
+          staff_id: string
+          starts_at: string
+          status: Database["public"]["Enums"]["appointment_status"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "appointments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       app_role: "admin" | "barber" | "client"
@@ -613,6 +785,14 @@ export type Database = {
         | "marketing"
         | "equipamentos"
         | "outros"
+      payment_method:
+        | "cash"
+        | "pix"
+        | "credit_card"
+        | "debit_card"
+        | "transfer"
+        | "other"
+      payment_status: "pending" | "paid" | "refunded" | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -757,6 +937,15 @@ export const Constants = {
         "equipamentos",
         "outros",
       ],
+      payment_method: [
+        "cash",
+        "pix",
+        "credit_card",
+        "debit_card",
+        "transfer",
+        "other",
+      ],
+      payment_status: ["pending", "paid", "refunded", "failed"],
     },
   },
 } as const
