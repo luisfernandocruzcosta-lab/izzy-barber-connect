@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -21,7 +22,11 @@ import { Card } from "@/components/ui/card";
 import { SplineScene } from "@/components/ui/splite";
 import { Spotlight } from "@/components/ui/spotlight";
 import { useAuth } from "@/hooks/useAuth";
-import { NotificationsBell } from "@/components/NotificationsBell";
+
+// Carregamento sob demanda do sino (usa supabase realtime).
+const NotificationsBell = lazy(() =>
+  import("@/components/NotificationsBell").then((m) => ({ default: m.NotificationsBell }))
+);
 
 const services = [
   { name: "Corte premium", time: "45 min", description: "Acabamento preciso e visual limpo, com agendamento em poucos toques." },
@@ -93,7 +98,9 @@ const Index = () => {
             <div className="flex items-center gap-2">
               {session ? (
                 <>
-                  <NotificationsBell />
+                  <Suspense fallback={null}>
+                    <NotificationsBell />
+                  </Suspense>
                   <Button asChild variant="outline" size="pill" className="hidden sm:inline-flex">
                     <Link to="/perfil">Perfil</Link>
                   </Button>
