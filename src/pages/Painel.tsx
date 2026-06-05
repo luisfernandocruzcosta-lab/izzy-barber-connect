@@ -820,6 +820,69 @@ const Painel = () => {
                   )}
                 </div>
               </TabsContent>
+
+              {/* CONFIGURAÇÕES */}
+              <TabsContent value="config">
+                <div className="glass-panel space-y-5 rounded-2xl p-5 sm:p-6">
+                  <div className="flex items-center gap-3">
+                    <SettingsIcon className="size-5 text-brand" />
+                    <h2 className="text-xl font-semibold text-foreground">Ajustes da barbearia</h2>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Controle como os clientes podem reservar, cancelar e como os horários são gerados.
+                  </p>
+
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/60 p-4">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Confirmar reservas automaticamente</p>
+                      <p className="text-xs text-muted-foreground">Quando ligado, novas reservas já entram confirmadas.</p>
+                    </div>
+                    <Switch
+                      checked={settings.auto_confirm}
+                      onCheckedChange={(v) => setSettings((s) => ({ ...s, auto_confirm: v }))}
+                    />
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label>Antecedência mínima (min)</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={settings.min_advance_minutes}
+                        onChange={(e) => setSettings((s) => ({ ...s, min_advance_minutes: Math.max(0, parseInt(e.target.value || "0", 10)) }))}
+                        className="rounded-xl bg-card"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Cancelamento até (min antes)</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={settings.cancel_window_minutes}
+                        onChange={(e) => setSettings((s) => ({ ...s, cancel_window_minutes: Math.max(0, parseInt(e.target.value || "0", 10)) }))}
+                        className="rounded-xl bg-card"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Intervalo entre horários (min)</Label>
+                      <Input
+                        type="number"
+                        min={5}
+                        step={5}
+                        value={settings.slot_interval_minutes}
+                        onChange={(e) => setSettings((s) => ({ ...s, slot_interval_minutes: Math.max(5, parseInt(e.target.value || "5", 10)) }))}
+                        className="rounded-xl bg-card"
+                      />
+                    </div>
+                  </div>
+
+                  <Button variant="hero" size="pill" onClick={handleSaveSettings} disabled={savingSettings}>
+                    {savingSettings && <Loader2 className="size-4 animate-spin" />}
+                    Salvar ajustes
+                  </Button>
+                </div>
+              </TabsContent>
             </Tabs>
           </div>
         )}
