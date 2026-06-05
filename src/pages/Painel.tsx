@@ -98,6 +98,13 @@ const Painel = () => {
   const [serviceForm, setServiceForm] = useState({ name: "", duration: "30", price: "" });
   const [ruleForm, setRuleForm] = useState({ staff_id: "", weekday: "1", start: "09:00", end: "18:00" });
   const [savingShop, setSavingShop] = useState(false);
+  const [settings, setSettings] = useState<{
+    auto_confirm: boolean;
+    min_advance_minutes: number;
+    cancel_window_minutes: number;
+    slot_interval_minutes: number;
+  }>({ auto_confirm: false, min_advance_minutes: 30, cancel_window_minutes: 120, slot_interval_minutes: 15 });
+  const [savingSettings, setSavingSettings] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
