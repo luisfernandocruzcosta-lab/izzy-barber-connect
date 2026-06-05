@@ -19,19 +19,19 @@ function BarberPole() {
     c.width = 128;
     c.height = 128;
     const ctx = c.getContext("2d")!;
-    // fundo branco
-    ctx.fillStyle = "#ffffff";
+    // fundo cinza claro
+    ctx.fillStyle = "#b0b0b0";
     ctx.fillRect(0, 0, 128, 128);
-    // listras diagonais
+    // listras diagonais em tons de cinza
     ctx.save();
     ctx.translate(64, 64);
     ctx.rotate(-Math.PI / 4);
     ctx.translate(-64, -64);
     const stripeH = 22;
     for (let y = -128; y < 256; y += stripeH * 3) {
-      ctx.fillStyle = "#e11d2a";
+      ctx.fillStyle = "#e8e8e8";
       ctx.fillRect(-64, y, 256, stripeH);
-      ctx.fillStyle = "#1d4ed8";
+      ctx.fillStyle = "#6b6b6b";
       ctx.fillRect(-64, y + stripeH, 256, stripeH);
     }
     ctx.restore();
