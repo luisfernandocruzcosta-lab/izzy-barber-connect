@@ -113,99 +113,6 @@ function BarberPole() {
   );
 }
 
-function Scissors() {
-  const ref = useRef<THREE.Group>(null!);
-  useFrame((state) => {
-    if (ref.current) {
-      ref.current.rotation.y = state.clock.elapsedTime * 0.6;
-    }
-  });
-  return (
-    <Float speed={1.8} rotationIntensity={0.4} floatIntensity={0.8}>
-      <group ref={ref} position={[-1.9, 0.6, 0.4]} scale={0.55}>
-        {/* Lâminas */}
-        <mesh rotation={[0, 0, 0.3]} position={[0.25, 0, 0]} castShadow>
-          <boxGeometry args={[1.2, 0.08, 0.03]} />
-          <meshStandardMaterial
-            color="#e8e8ec"
-            metalness={1}
-            roughness={0.15}
-          />
-        </mesh>
-        <mesh rotation={[0, 0, -0.3]} position={[0.25, 0, 0]} castShadow>
-          <boxGeometry args={[1.2, 0.08, 0.03]} />
-          <meshStandardMaterial
-            color="#e8e8ec"
-            metalness={1}
-            roughness={0.15}
-          />
-        </mesh>
-        {/* Pivot */}
-        <mesh position={[0.25, 0, 0]} castShadow>
-          <cylinderGeometry args={[0.06, 0.06, 0.1, 24]} />
-          <meshStandardMaterial
-            color="#a0a0a0"
-            metalness={1}
-            roughness={0.2}
-          />
-        </mesh>
-        {/* Anéis (cabos) */}
-        <mesh position={[-0.55, 0.22, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[0.18, 0.04, 16, 32]} />
-          <meshStandardMaterial
-            color="#a0a0a0"
-            metalness={0.9}
-            roughness={0.25}
-          />
-        </mesh>
-        <mesh position={[-0.55, -0.22, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[0.18, 0.04, 16, 32]} />
-          <meshStandardMaterial
-            color="#a0a0a0"
-            metalness={0.9}
-            roughness={0.25}
-          />
-        </mesh>
-      </group>
-    </Float>
-  );
-}
-
-function Razor() {
-  return (
-    <Float speed={1.4} rotationIntensity={0.5} floatIntensity={0.7}>
-      <group position={[1.9, 0.3, 0.2]} rotation={[0, -0.4, -0.3]} scale={0.6}>
-        {/* Cabo */}
-        <mesh castShadow>
-          <boxGeometry args={[1.1, 0.12, 0.12]} />
-          <meshStandardMaterial
-            color="#0a0a0a"
-            metalness={0.4}
-            roughness={0.5}
-          />
-        </mesh>
-        {/* Lâmina */}
-        <mesh position={[0.85, 0.05, 0]} rotation={[0, 0, 0.5]} castShadow>
-          <boxGeometry args={[0.8, 0.18, 0.02]} />
-          <meshStandardMaterial
-            color="#f0f0f3"
-            metalness={1}
-            roughness={0.1}
-          />
-        </mesh>
-        {/* Detalhe prata */}
-        <mesh position={[-0.4, 0, 0]}>
-          <boxGeometry args={[0.1, 0.16, 0.16]} />
-          <meshStandardMaterial
-            color="#a0a0a0"
-            metalness={1}
-            roughness={0.2}
-          />
-        </mesh>
-      </group>
-    </Float>
-  );
-}
 
 export function BarberShopScene() {
   return (
@@ -234,8 +141,6 @@ export function BarberShopScene() {
         <BarberPole />
       </Float>
 
-      <Scissors />
-      <Razor />
 
       <ContactShadows
         position={[0, -1.25, 0]}
