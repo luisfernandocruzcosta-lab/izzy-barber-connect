@@ -14,12 +14,14 @@ import {
   MessageCircle,
   Plus,
   Scissors,
+  Settings as SettingsIcon,
   Store,
   Trash2,
   TrendingUp,
   Users,
   XCircle,
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 import logo from "@/assets/izzy-barber-logo.png";
 import { Button } from "@/components/ui/button";
