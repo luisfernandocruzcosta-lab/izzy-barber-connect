@@ -193,11 +193,11 @@ function Razor() {
             roughness={0.1}
           />
         </mesh>
-        {/* Detalhe dourado */}
+        {/* Detalhe prata */}
         <mesh position={[-0.4, 0, 0]}>
           <boxGeometry args={[0.1, 0.16, 0.16]} />
           <meshStandardMaterial
-            color="#d4af37"
+            color="#a0a0a0"
             metalness={1}
             roughness={0.2}
           />
