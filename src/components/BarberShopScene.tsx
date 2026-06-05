@@ -141,8 +141,6 @@ export function BarberShopScene() {
         <BarberPole />
       </Float>
 
-      <Scissors />
-      <Razor />
 
       <ContactShadows
         position={[0, -1.25, 0]}
