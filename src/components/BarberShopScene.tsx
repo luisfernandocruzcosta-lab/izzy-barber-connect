@@ -53,11 +53,11 @@ function BarberPole() {
 
   return (
     <group position={[0, -0.2, 0]}>
-      {/* Topo dourado */}
+      {/* Topo prata */}
       <mesh position={[0, 1.55, 0]} castShadow>
         <cylinderGeometry args={[0.32, 0.28, 0.2, 32]} />
         <meshStandardMaterial
-          color="#d4af37"
+          color="#a0a0a0"
           metalness={0.9}
           roughness={0.2}
         />
@@ -65,7 +65,7 @@ function BarberPole() {
       <mesh position={[0, 1.7, 0]} castShadow>
         <sphereGeometry args={[0.18, 32, 32]} />
         <meshStandardMaterial
-          color="#d4af37"
+          color="#a0a0a0"
           metalness={0.95}
           roughness={0.15}
         />
@@ -85,7 +85,7 @@ function BarberPole() {
       <mesh position={[0, 0.55, 0]}>
         <cylinderGeometry args={[0.32, 0.32, 1.85, 64, 1, true]} />
         <meshPhysicalMaterial
-          color="#ffffff"
+          color="#e0e0e0"
           transmission={0.9}
           thickness={0.2}
           roughness={0.05}
@@ -100,7 +100,7 @@ function BarberPole() {
       <mesh position={[0, -0.45, 0]} castShadow>
         <cylinderGeometry args={[0.32, 0.36, 0.25, 32]} />
         <meshStandardMaterial
-          color="#d4af37"
+          color="#a0a0a0"
           metalness={0.9}
           roughness={0.25}
         />
