@@ -171,13 +171,15 @@ const Painel = () => {
   const loadShopDetails = async (shopData: Shop) => {
     setShop(shopData);
 
-    const [staffRes, servicesRes] = await Promise.all([
+    const [staffRes, servicesRes, settingsRes] = await Promise.all([
       supabase.from("shop_staff").select("id, display_name, bio, is_bookable").eq("shop_id", shopData.id).order("created_at"),
       supabase.from("services").select("id, name, duration_minutes, price_cents, is_active").eq("shop_id", shopData.id).order("created_at"),
+      supabase.from("shop_settings").select("auto_confirm, min_advance_minutes, cancel_window_minutes, slot_interval_minutes").eq("shop_id", shopData.id).maybeSingle(),
     ]);
 
     setStaff(staffRes.data ?? []);
     setServices(servicesRes.data ?? []);
+    if (settingsRes.data) setSettings(settingsRes.data);
 
     await Promise.all([
       reloadAgenda(shopData.id, agendaDate),
@@ -202,7 +204,7 @@ const Painel = () => {
     if (!user) return;
     setLoading(true);
 
-    let query = supabase.from("barber_shops").select("id, name, address, description").order("created_at");
+    let query = supabase.from("barber_shops").select("id, name, address, phone, description").order("created_at");
     if (!isAdmin) query = query.eq("owner_user_id", user.id);
 
     const { data: shopList } = await query;
