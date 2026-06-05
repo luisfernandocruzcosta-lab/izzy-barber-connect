@@ -144,7 +144,7 @@ function Scissors() {
         <mesh position={[0.25, 0, 0]} castShadow>
           <cylinderGeometry args={[0.06, 0.06, 0.1, 24]} />
           <meshStandardMaterial
-            color="#d4af37"
+            color="#a0a0a0"
             metalness={1}
             roughness={0.2}
           />
@@ -153,7 +153,7 @@ function Scissors() {
         <mesh position={[-0.55, 0.22, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <torusGeometry args={[0.18, 0.04, 16, 32]} />
           <meshStandardMaterial
-            color="#d4af37"
+            color="#a0a0a0"
             metalness={0.9}
             roughness={0.25}
           />
@@ -161,7 +161,7 @@ function Scissors() {
         <mesh position={[-0.55, -0.22, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <torusGeometry args={[0.18, 0.04, 16, 32]} />
           <meshStandardMaterial
-            color="#d4af37"
+            color="#a0a0a0"
             metalness={0.9}
             roughness={0.25}
           />
