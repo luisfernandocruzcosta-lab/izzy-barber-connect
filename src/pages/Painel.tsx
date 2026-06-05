@@ -299,6 +299,31 @@ const Painel = () => {
     void loadAll();
   };
 
+  const handleToggleBookable = async (s: Staff) => {
+    const next = !s.is_bookable;
+    const { error } = await supabase.from("shop_staff").update({ is_bookable: next }).eq("id", s.id);
+    if (error) return toast({ title: "Erro", description: "Não foi possível atualizar.", variant: "destructive" });
+    setStaff((prev) => prev.map((x) => (x.id === s.id ? { ...x, is_bookable: next } : x)));
+  };
+
+  const handleSaveSettings = async () => {
+    if (!shop) return;
+    setSavingSettings(true);
+    const { error } = await supabase
+      .from("shop_settings")
+      .update({
+        auto_confirm: settings.auto_confirm,
+        min_advance_minutes: settings.min_advance_minutes,
+        cancel_window_minutes: settings.cancel_window_minutes,
+        slot_interval_minutes: settings.slot_interval_minutes,
+      })
+      .eq("shop_id", shop.id);
+    setSavingSettings(false);
+    if (error) return toast({ title: "Erro ao salvar", variant: "destructive" });
+    toast({ title: "Configurações salvas" });
+  };
+
+
   const handleAddService = async () => {
     if (!shop) return;
     const duration = parseInt(serviceForm.duration, 10);
