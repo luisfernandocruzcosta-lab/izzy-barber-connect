@@ -669,13 +669,21 @@ const Painel = () => {
                     <ul className="space-y-2">
                       {staff.map((s) => (
                         <li key={s.id} className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/60 p-3">
-                          <div>
+                          <div className="min-w-0">
                             <p className="text-sm font-semibold text-foreground">{s.display_name}</p>
                             {s.bio && <p className="text-xs text-muted-foreground">{s.bio}</p>}
                           </div>
-                          <Button variant="ghost" size="icon" onClick={() => handleDeleteStaff(s.id)}>
-                            <Trash2 className="size-4" />
-                          </Button>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <div className="flex items-center gap-2">
+                              <Switch checked={s.is_bookable} onCheckedChange={() => handleToggleBookable(s)} />
+                              <span className="text-xs text-muted-foreground hidden sm:inline">
+                                {s.is_bookable ? "Aceita reservas" : "Pausado"}
+                              </span>
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteStaff(s.id)}>
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </div>
                         </li>
                       ))}
                     </ul>
