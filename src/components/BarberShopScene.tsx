@@ -210,8 +210,8 @@ function Razor() {
 export function BarberShopScene() {
   return (
     <>
-      <color attach="background" args={["#000000"]} />
-      <fog attach="fog" args={["#000000", 6, 14]} />
+      <color attach="background" args={["#0a0a0a"]} />
+      <fog attach="fog" args={["#0a0a0a", 6, 14]} />
 
       <ambientLight intensity={0.35} />
       <directionalLight
@@ -220,14 +220,14 @@ export function BarberShopScene() {
         castShadow
         shadow-mapSize={[1024, 1024]}
       />
-      <pointLight position={[-3, 2, 2]} intensity={0.8} color="#e11d2a" />
-      <pointLight position={[3, 2, 2]} intensity={0.8} color="#1d4ed8" />
+      <pointLight position={[-3, 2, 2]} intensity={0.6} color="#cccccc" />
+      <pointLight position={[3, 2, 2]} intensity={0.6} color="#aaaaaa" />
       <spotLight
         position={[0, 5, 3]}
         angle={0.4}
         penumbra={0.8}
-        intensity={1.4}
-        color="#d4af37"
+        intensity={1.2}
+        color="#e0e0e0"
       />
 
       <Float speed={1} rotationIntensity={0.15} floatIntensity={0.3}>
