@@ -19,7 +19,7 @@ import {
 import logo from "@/assets/izzy-barber-logo.png";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { SplineScene } from "@/components/ui/splite";
+import { BarberShop3D } from "@/components/BarberShop3D";
 import { Spotlight } from "@/components/ui/spotlight";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -147,10 +147,7 @@ const Index = () => {
                 </div>
               </div>
               <div className="relative h-[260px] w-full sm:h-[320px] md:h-auto md:flex-1">
-                <SplineScene
-                  scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
-                  className="h-full w-full"
-                />
+                <BarberShop3D className="h-full w-full" />
               </div>
             </div>
           </Card>
