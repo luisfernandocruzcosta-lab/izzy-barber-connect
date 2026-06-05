@@ -14,12 +14,14 @@ import {
   MessageCircle,
   Plus,
   Scissors,
+  Settings as SettingsIcon,
   Store,
   Trash2,
   TrendingUp,
   Users,
   XCircle,
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 import logo from "@/assets/izzy-barber-logo.png";
 import { Button } from "@/components/ui/button";
@@ -96,6 +98,13 @@ const Painel = () => {
   const [serviceForm, setServiceForm] = useState({ name: "", duration: "30", price: "" });
   const [ruleForm, setRuleForm] = useState({ staff_id: "", weekday: "1", start: "09:00", end: "18:00" });
   const [savingShop, setSavingShop] = useState(false);
+  const [settings, setSettings] = useState<{
+    auto_confirm: boolean;
+    min_advance_minutes: number;
+    cancel_window_minutes: number;
+    slot_interval_minutes: number;
+  }>({ auto_confirm: false, min_advance_minutes: 30, cancel_window_minutes: 120, slot_interval_minutes: 15 });
+  const [savingSettings, setSavingSettings] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -162,13 +171,15 @@ const Painel = () => {
   const loadShopDetails = async (shopData: Shop) => {
     setShop(shopData);
 
-    const [staffRes, servicesRes] = await Promise.all([
+    const [staffRes, servicesRes, settingsRes] = await Promise.all([
       supabase.from("shop_staff").select("id, display_name, bio, is_bookable").eq("shop_id", shopData.id).order("created_at"),
       supabase.from("services").select("id, name, duration_minutes, price_cents, is_active").eq("shop_id", shopData.id).order("created_at"),
+      supabase.from("shop_settings").select("auto_confirm, min_advance_minutes, cancel_window_minutes, slot_interval_minutes").eq("shop_id", shopData.id).maybeSingle(),
     ]);
 
     setStaff(staffRes.data ?? []);
     setServices(servicesRes.data ?? []);
+    if (settingsRes.data) setSettings(settingsRes.data);
 
     await Promise.all([
       reloadAgenda(shopData.id, agendaDate),
@@ -193,7 +204,7 @@ const Painel = () => {
     if (!user) return;
     setLoading(true);
 
-    let query = supabase.from("barber_shops").select("id, name, address, description").order("created_at");
+    let query = supabase.from("barber_shops").select("id, name, address, phone, description").order("created_at");
     if (!isAdmin) query = query.eq("owner_user_id", user.id);
 
     const { data: shopList } = await query;
@@ -287,6 +298,31 @@ const Painel = () => {
     toast({ title: "Barbeiro removido" });
     void loadAll();
   };
+
+  const handleToggleBookable = async (s: Staff) => {
+    const next = !s.is_bookable;
+    const { error } = await supabase.from("shop_staff").update({ is_bookable: next }).eq("id", s.id);
+    if (error) return toast({ title: "Erro", description: "Não foi possível atualizar.", variant: "destructive" });
+    setStaff((prev) => prev.map((x) => (x.id === s.id ? { ...x, is_bookable: next } : x)));
+  };
+
+  const handleSaveSettings = async () => {
+    if (!shop) return;
+    setSavingSettings(true);
+    const { error } = await supabase
+      .from("shop_settings")
+      .update({
+        auto_confirm: settings.auto_confirm,
+        min_advance_minutes: settings.min_advance_minutes,
+        cancel_window_minutes: settings.cancel_window_minutes,
+        slot_interval_minutes: settings.slot_interval_minutes,
+      })
+      .eq("shop_id", shop.id);
+    setSavingSettings(false);
+    if (error) return toast({ title: "Erro ao salvar", variant: "destructive" });
+    toast({ title: "Configurações salvas" });
+  };
+
 
   const handleAddService = async () => {
     if (!shop) return;
@@ -494,12 +530,13 @@ const Painel = () => {
             </section>
 
             <Tabs defaultValue="agenda" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5">
+              <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6">
                 <TabsTrigger value="agenda">Agenda</TabsTrigger>
                 <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
                 <TabsTrigger value="equipe">Equipe</TabsTrigger>
                 <TabsTrigger value="servicos">Serviços</TabsTrigger>
                 <TabsTrigger value="horarios">Horários</TabsTrigger>
+                <TabsTrigger value="config">Ajustes</TabsTrigger>
               </TabsList>
 
               {/* AGENDA */}
@@ -632,13 +669,21 @@ const Painel = () => {
                     <ul className="space-y-2">
                       {staff.map((s) => (
                         <li key={s.id} className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/60 p-3">
-                          <div>
+                          <div className="min-w-0">
                             <p className="text-sm font-semibold text-foreground">{s.display_name}</p>
                             {s.bio && <p className="text-xs text-muted-foreground">{s.bio}</p>}
                           </div>
-                          <Button variant="ghost" size="icon" onClick={() => handleDeleteStaff(s.id)}>
-                            <Trash2 className="size-4" />
-                          </Button>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <div className="flex items-center gap-2">
+                              <Switch checked={s.is_bookable} onCheckedChange={() => handleToggleBookable(s)} />
+                              <span className="text-xs text-muted-foreground hidden sm:inline">
+                                {s.is_bookable ? "Aceita reservas" : "Pausado"}
+                              </span>
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteStaff(s.id)}>
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </div>
                         </li>
                       ))}
                     </ul>
@@ -773,6 +818,69 @@ const Painel = () => {
                         ))}
                     </ul>
                   )}
+                </div>
+              </TabsContent>
+
+              {/* CONFIGURAÇÕES */}
+              <TabsContent value="config">
+                <div className="glass-panel space-y-5 rounded-2xl p-5 sm:p-6">
+                  <div className="flex items-center gap-3">
+                    <SettingsIcon className="size-5 text-brand" />
+                    <h2 className="text-xl font-semibold text-foreground">Ajustes da barbearia</h2>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Controle como os clientes podem reservar, cancelar e como os horários são gerados.
+                  </p>
+
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/60 p-4">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Confirmar reservas automaticamente</p>
+                      <p className="text-xs text-muted-foreground">Quando ligado, novas reservas já entram confirmadas.</p>
+                    </div>
+                    <Switch
+                      checked={settings.auto_confirm}
+                      onCheckedChange={(v) => setSettings((s) => ({ ...s, auto_confirm: v }))}
+                    />
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label>Antecedência mínima (min)</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={settings.min_advance_minutes}
+                        onChange={(e) => setSettings((s) => ({ ...s, min_advance_minutes: Math.max(0, parseInt(e.target.value || "0", 10)) }))}
+                        className="rounded-xl bg-card"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Cancelamento até (min antes)</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={settings.cancel_window_minutes}
+                        onChange={(e) => setSettings((s) => ({ ...s, cancel_window_minutes: Math.max(0, parseInt(e.target.value || "0", 10)) }))}
+                        className="rounded-xl bg-card"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Intervalo entre horários (min)</Label>
+                      <Input
+                        type="number"
+                        min={5}
+                        step={5}
+                        value={settings.slot_interval_minutes}
+                        onChange={(e) => setSettings((s) => ({ ...s, slot_interval_minutes: Math.max(5, parseInt(e.target.value || "5", 10)) }))}
+                        className="rounded-xl bg-card"
+                      />
+                    </div>
+                  </div>
+
+                  <Button variant="hero" size="pill" onClick={handleSaveSettings} disabled={savingSettings}>
+                    {savingSettings && <Loader2 className="size-4 animate-spin" />}
+                    Salvar ajustes
+                  </Button>
                 </div>
               </TabsContent>
             </Tabs>
