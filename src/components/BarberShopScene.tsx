@@ -3,6 +3,10 @@ import { useFrame } from "@react-three/fiber";
 import { Float, Environment, ContactShadows } from "@react-three/drei";
 import * as THREE from "three";
 
+interface BarberShopSceneProps {
+  quality?: "high" | "low";
+}
+
 /**
  * Cena 3D temática de barbearia:
  *  - Poste de barbeiro (barber pole) com listras girando
