@@ -530,13 +530,13 @@ const Painel = () => {
             </section>
 
             <Tabs defaultValue="agenda" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6">
-                <TabsTrigger value="agenda">Agenda</TabsTrigger>
-                <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
-                <TabsTrigger value="equipe">Equipe</TabsTrigger>
-                <TabsTrigger value="servicos">Serviços</TabsTrigger>
-                <TabsTrigger value="horarios">Horários</TabsTrigger>
-                <TabsTrigger value="config">Ajustes</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 h-auto gap-1 p-1">
+                <TabsTrigger value="agenda" className="py-2">Agenda</TabsTrigger>
+                <TabsTrigger value="financeiro" className="py-2">Financeiro</TabsTrigger>
+                <TabsTrigger value="equipe" className="py-2">Equipe</TabsTrigger>
+                <TabsTrigger value="servicos" className="py-2">Serviços</TabsTrigger>
+                <TabsTrigger value="horarios" className="py-2">Horários</TabsTrigger>
+                <TabsTrigger value="config" className="py-2">Ajustes</TabsTrigger>
               </TabsList>
 
               {/* AGENDA */}
