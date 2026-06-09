@@ -3,7 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { Float, Environment, ContactShadows } from "@react-three/drei";
 import * as THREE from "three";
 
-interface BarberShopSceneProps {
+export interface BarberShopSceneProps {
   quality?: "high" | "low";
 }
 
