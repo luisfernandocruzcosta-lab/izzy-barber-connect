@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import type { BarberShopSceneProps } from "./BarberShopScene";
 
 const Canvas = lazy(() =>
   import("@react-three/fiber").then((m) => ({ default: m.Canvas }))
