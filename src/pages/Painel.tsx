@@ -529,7 +529,7 @@ const Painel = () => {
               </div>
             </section>
 
-            <Tabs defaultValue="agenda" className="space-y-4">
+            <Tabs defaultValue="agenda" className="space-y-6">
               <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6">
                 <TabsTrigger value="agenda">Agenda</TabsTrigger>
                 <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
