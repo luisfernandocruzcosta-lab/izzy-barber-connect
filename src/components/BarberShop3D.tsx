@@ -4,6 +4,11 @@ const Canvas = lazy(() =>
   import("@react-three/fiber").then((m) => ({ default: m.Canvas }))
 );
 
+function isMobile() {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia?.("(max-width: 768px)").matches || false;
+}
+
 function isLowPowerDevice() {
   if (typeof navigator === "undefined") return false;
   const nav = navigator as Navigator & {
