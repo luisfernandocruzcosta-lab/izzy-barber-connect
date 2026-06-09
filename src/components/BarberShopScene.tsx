@@ -139,38 +139,44 @@ function BarberPole({ low }: { low: boolean }) {
 }
 
 
-export function BarberShopScene() {
+export function BarberShopScene({ quality = "high" }: BarberShopSceneProps) {
+  const low = quality === "low";
   return (
     <>
       <ambientLight intensity={0.35} />
       <directionalLight
         position={[5, 6, 5]}
         intensity={1.2}
-        castShadow
-        shadow-mapSize={[1024, 1024]}
+        castShadow={!low}
+        shadow-mapSize={low ? [512, 512] : [1024, 1024]}
       />
-      <pointLight position={[-3, 2, 2]} intensity={0.6} color="#cccccc" />
-      <pointLight position={[3, 2, 2]} intensity={0.6} color="#aaaaaa" />
-      <spotLight
-        position={[0, 5, 3]}
-        angle={0.4}
-        penumbra={0.8}
-        intensity={1.2}
-        color="#e0e0e0"
-      />
+      {!low && (
+        <>
+          <pointLight position={[-3, 2, 2]} intensity={0.6} color="#cccccc" />
+          <pointLight position={[3, 2, 2]} intensity={0.6} color="#aaaaaa" />
+          <spotLight
+            position={[0, 5, 3]}
+            angle={0.4}
+            penumbra={0.8}
+            intensity={1.2}
+            color="#e0e0e0"
+          />
+        </>
+      )}
 
       <Float speed={1} rotationIntensity={0.15} floatIntensity={0.3}>
-        <BarberPole />
+        <BarberPole low={low} />
       </Float>
 
-
-      <ContactShadows
-        position={[0, -1.25, 0]}
-        opacity={0.55}
-        scale={8}
-        blur={2.4}
-        far={3}
-      />
+      {!low && (
+        <ContactShadows
+          position={[0, -1.25, 0]}
+          opacity={0.55}
+          scale={8}
+          blur={2.4}
+          far={3}
+        />
+      )}
 
       <Environment preset="city" />
     </>
