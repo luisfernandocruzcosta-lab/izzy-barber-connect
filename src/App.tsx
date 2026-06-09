@@ -18,7 +18,7 @@ const MinhasReservas = lazy(() => import("./pages/MinhasReservas.tsx"));
 const Perfil = lazy(() => import("./pages/Perfil.tsx"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
-const Demo = lazy(() => import("./pages/Demo.tsx"));
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,7 +55,7 @@ const App = () => (
               <Route path="/minhas-reservas" element={<MinhasReservas />} />
               <Route path="/perfil" element={<Perfil />} />
               <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/demo" element={<Demo />} />
+              
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
