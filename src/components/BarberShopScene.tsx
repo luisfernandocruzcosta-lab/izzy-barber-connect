@@ -117,9 +117,6 @@ function BarberPole() {
 export function BarberShopScene() {
   return (
     <>
-      <color attach="background" args={["#0a0a0a"]} />
-      <fog attach="fog" args={["#0a0a0a", 6, 14]} />
-
       <ambientLight intensity={0.35} />
       <directionalLight
         position={[5, 6, 5]}
