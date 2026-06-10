@@ -47,15 +47,25 @@ function BarberPole({ low }: { low: boolean }) {
 
   useFrame((_, delta) => {
     if (!stripesRef.current) return;
-    const frameTime = low ? 1 / 30 : 0; // cap ~30fps no mobile
-    if (frameTime > 0) {
+    let dt = delta;
+    if (low) {
+      // cap ~30fps no mobile, acumulando o tempo real para o passo
       acc.current += delta;
+      const frameTime = 1 / 30;
       if (acc.current < frameTime) return;
+      dt = acc.current;
       acc.current = 0;
     }
     const mat = stripesRef.current.material as THREE.MeshStandardMaterial;
     if (mat.map) {
-      mat.map.offset.y -= delta * 0.35;
+      // Como a textura está rotacionada -45° e repeat.x == repeat.y,
+      // animar offset.x e offset.y na mesma taxa faz a espiral subir
+      // perpendicular às listras, preservando o alinhamento do seam.
+      const speed = 0.18;
+      const step = dt * speed;
+      // mantém os offsets dentro de [0,1) para evitar perda de precisão
+      mat.map.offset.x = (mat.map.offset.x - step) % 1;
+      mat.map.offset.y = (mat.map.offset.y - step) % 1;
     }
   });
 
