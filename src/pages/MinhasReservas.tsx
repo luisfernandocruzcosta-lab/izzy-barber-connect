@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, CalendarDays, CalendarSync, Loader2, MessageCircle, Scissors, Sparkles, Star, Store, X } from "lucide-react";
+import { ArrowLeft, CalendarDays, CalendarSync, Loader2, MessageCircle, Scissors, Sparkles, Star, Store, UserRound, X } from "lucide-react";
 
 import logo from "@/assets/izzy-barber-logo.png";
 import { Button } from "@/components/ui/button";
