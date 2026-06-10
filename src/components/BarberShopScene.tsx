@@ -23,31 +23,25 @@ function BarberPole({ low }: { low: boolean }) {
   const segStr = low ? 24 : 64;
   const segGlass = low ? 24 : 64;
 
-  // Textura procedural de listras vermelho/branco/azul em diagonal
+  // Textura de faixas horizontais seamless, rotacionada 45° via
+  // texture.rotation. Com repeat.x == repeat.y as bordas em U casam
+  // perfeitamente ao redor do cilindro, evitando o efeito de
+  // "4 imagens" causado por emendas mal alinhadas.
   const stripeTexture = useMemo(() => {
     const c = document.createElement("canvas");
-    c.width = 128;
+    c.width = 16;
     c.height = 128;
     const ctx = c.getContext("2d")!;
-    // fundo cinza claro
-    ctx.fillStyle = "#b0b0b0";
-    ctx.fillRect(0, 0, 128, 128);
-    // listras diagonais em tons de cinza
-    ctx.save();
-    ctx.translate(64, 64);
-    ctx.rotate(-Math.PI / 4);
-    ctx.translate(-64, -64);
-    const stripeH = 22;
-    for (let y = -128; y < 256; y += stripeH * 3) {
-      ctx.fillStyle = "#e8e8e8";
-      ctx.fillRect(-64, y, 256, stripeH);
-      ctx.fillStyle = "#6b6b6b";
-      ctx.fillRect(-64, y + stripeH, 256, stripeH);
-    }
-    ctx.restore();
+    ctx.fillStyle = "#e8e8e8";
+    ctx.fillRect(0, 0, 16, 64);
+    ctx.fillStyle = "#6b6b6b";
+    ctx.fillRect(0, 64, 16, 64);
     const tex = new THREE.CanvasTexture(c);
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-    tex.repeat.set(1, 2);
+    tex.center.set(0.5, 0.5);
+    tex.rotation = -Math.PI / 4;
+    tex.repeat.set(4, 4);
+    tex.anisotropy = 4;
     return tex;
   }, []);
 
