@@ -53,30 +53,41 @@ const MinhasReservas = () => {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const [resv, loy, rev] = await Promise.all([
-      supabase
-        .from("appointments")
-        .select(
-          `id, starts_at, ends_at, status, staff_id, service_id, shop_id,
-           service:services(name, price_cents, duration_minutes),
-           shop:barber_shops(name, address),
-           staff:shop_staff(display_name)`
-        )
-        .eq("client_user_id", user.id)
-        .order("starts_at", { ascending: false }),
-      supabase
-        .from("loyalty_accounts")
-        .select("shop_id, points_balance, total_visits, shop:barber_shops(name)")
-        .eq("client_user_id", user.id),
-      supabase.from("reviews").select("appointment_id").eq("client_user_id", user.id),
-    ]);
+    try {
+      const [resv, loy, rev] = await Promise.all([
+        supabase
+          .from("appointments")
+          .select(
+            `id, starts_at, ends_at, status, staff_id, service_id, shop_id,
+             service:services(name, price_cents, duration_minutes),
+             shop:barber_shops(name, address),
+             staff:shop_staff(display_name)`
+          )
+          .eq("client_user_id", user.id)
+          .order("starts_at", { ascending: false }),
+        supabase
+          .from("loyalty_accounts")
+          .select("shop_id, points_balance, total_visits, shop:barber_shops(name)")
+          .eq("client_user_id", user.id),
+        supabase.from("reviews").select("appointment_id").eq("client_user_id", user.id),
+      ]);
 
-    if (resv.error) toast({ title: "Erro", description: "Não foi possível concluir a operação. Tente novamente.", variant: "destructive" });
+      if (resv.error) {
+        console.error("Erro ao carregar reservas:", resv.error);
+        toast({ title: "Erro ao carregar reservas", description: resv.error.message, variant: "destructive" });
+      }
+      if (loy.error) console.error("Erro ao carregar fidelidade:", loy.error);
+      if (rev.error) console.error("Erro ao carregar avaliações:", rev.error);
 
-    setReservations((resv.data ?? []) as unknown as Reservation[]);
-    setLoyalty((loy.data ?? []) as unknown as LoyaltyRow[]);
-    setReviewedIds(new Set((rev.data ?? []).map((r) => r.appointment_id)));
-    setLoading(false);
+      setReservations((resv.data ?? []) as unknown as Reservation[]);
+      setLoyalty((loy.data ?? []) as unknown as LoyaltyRow[]);
+      setReviewedIds(new Set((rev.data ?? []).map((r) => r.appointment_id)));
+    } catch (err) {
+      console.error("Falha inesperada ao carregar minhas reservas:", err);
+      toast({ title: "Erro", description: "Não foi possível carregar suas reservas.", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
