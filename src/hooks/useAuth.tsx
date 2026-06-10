@@ -24,8 +24,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
     const loadRoles = async (userId: string) => {
-      const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+      if (cancelled) return;
+      if (error) console.error("Failed to load user roles:", error);
       setRoles((data ?? []).map((r) => r.role as AppRole));
     };
 
@@ -34,21 +41,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
       if (nextSession?.user.id) {
-        setTimeout(() => void loadRoles(nextSession.user.id), 0);
+        // Carrega roles e só então libera `loading` para evitar
+        // que o redirect use um homePath defasado.
+        setLoading(true);
+        setTimeout(() => {
+          void loadRoles(nextSession.user.id).finally(() => {
+            if (!cancelled) setLoading(false);
+          });
+        }, 0);
       } else {
         setRoles([]);
+        setLoading(false);
       }
     });
 
-    void supabase.auth.getSession().then(({ data }) => {
+    void supabase.auth.getSession().then(async ({ data }) => {
+      if (cancelled) return;
       setSession(data.session);
       if (data.session?.user.id) {
-        void loadRoles(data.session.user.id);
+        await loadRoles(data.session.user.id);
       }
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
