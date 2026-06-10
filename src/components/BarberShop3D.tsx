@@ -1,8 +1,14 @@
 import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import type { BarberShopSceneProps } from "./BarberShopScene";
 
 const Canvas = lazy(() =>
   import("@react-three/fiber").then((m) => ({ default: m.Canvas }))
 );
+
+function isMobile() {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia?.("(max-width: 768px)").matches || false;
+}
 
 function isLowPowerDevice() {
   if (typeof navigator === "undefined") return false;
@@ -31,10 +37,16 @@ export function BarberShop3D({ className }: BarberShop3DProps) {
   const [inView, setInView] = useState(false);
   const [activated, setActivated] = useState(false);
   const [lowPower, setLowPower] = useState(false);
-  const [SceneComp, setSceneComp] = useState<React.ComponentType | null>(null);
+  const [mobile, setMobile] = useState(false);
+  const [SceneComp, setSceneComp] = useState<React.ComponentType<BarberShopSceneProps> | null>(null);
 
   useEffect(() => {
     setLowPower(isLowPowerDevice());
+    setMobile(isMobile());
+    const mql = window.matchMedia?.("(max-width: 768px)");
+    const onChange = () => setMobile(isMobile());
+    mql?.addEventListener?.("change", onChange);
+    return () => mql?.removeEventListener?.("change", onChange);
   }, []);
 
   useEffect(() => {
@@ -61,6 +73,8 @@ export function BarberShop3D({ className }: BarberShop3DProps) {
     );
   }, [shouldLoad, SceneComp]);
 
+  const reduced = mobile || lowPower;
+
   return (
     <div ref={ref} className={className}>
       {shouldLoad && SceneComp ? (
@@ -72,12 +86,12 @@ export function BarberShop3D({ className }: BarberShop3DProps) {
           }
         >
           <Canvas
-            dpr={[1, 1.5]}
+            dpr={reduced ? 1 : [1, 1.5]}
             camera={{ position: [0, 0.6, 5], fov: 40 }}
-            gl={{ antialias: true, alpha: true }}
+            gl={{ antialias: !reduced, alpha: true }}
             className="!h-full !w-full"
           >
-            <SceneComp />
+            <SceneComp quality={reduced ? "low" : "high"} />
           </Canvas>
         </Suspense>
       ) : lowPower && inView ? (
