@@ -91,8 +91,11 @@ const Index = () => {
                   <Suspense fallback={null}>
                     <NotificationsBell />
                   </Suspense>
-                  <Button asChild variant="outline" size="pill" className="hidden sm:inline-flex">
-                    <Link to="/perfil">Perfil</Link>
+                  <Button asChild variant="outline" size="pill" aria-label="Perfil" className="px-3 sm:px-4">
+                    <Link to="/perfil">
+                      <UserRound className="size-4" />
+                      <span className="hidden sm:inline">Perfil</span>
+                    </Link>
                   </Button>
                   <Button asChild variant="hero" size="pill">
                     <Link to={isBarber ? "/painel" : "/minhas-reservas"}>

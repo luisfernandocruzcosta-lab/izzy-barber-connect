@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, CalendarDays, CalendarSync, Loader2, MessageCircle, Scissors, Sparkles, Star, Store, X } from "lucide-react";
+import { ArrowLeft, CalendarDays, CalendarSync, Loader2, MessageCircle, Scissors, Sparkles, Star, Store, UserRound, X } from "lucide-react";
 
 import logo from "@/assets/izzy-barber-logo.png";
 import { Button } from "@/components/ui/button";
@@ -121,9 +121,17 @@ const MinhasReservas = () => {
               <p className="text-sm font-semibold text-foreground">Minhas reservas</p>
             </div>
           </Link>
-          <Button asChild variant="hero" size="pill">
-            <Link to="/buscar">Novo agendamento</Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="outline" size="pill" aria-label="Perfil" className="px-3 sm:px-4">
+              <Link to="/perfil">
+                <UserRound className="size-4" />
+                <span className="hidden sm:inline">Perfil</span>
+              </Link>
+            </Button>
+            <Button asChild variant="hero" size="pill">
+              <Link to="/buscar">Novo agendamento</Link>
+            </Button>
+          </div>
         </header>
 
         <div className="mt-6">
