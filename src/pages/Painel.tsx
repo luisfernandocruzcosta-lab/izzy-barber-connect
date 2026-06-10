@@ -18,6 +18,7 @@ import {
   Store,
   Trash2,
   TrendingUp,
+  UserRound,
   Users,
   XCircle,
 } from "lucide-react";
