@@ -18,6 +18,7 @@ import {
   Store,
   Trash2,
   TrendingUp,
+  UserRound,
   Users,
   XCircle,
 } from "lucide-react";
@@ -448,9 +449,14 @@ const Painel = () => {
               <p className="text-sm font-semibold text-foreground">{shop?.name ?? "Sua barbearia"}</p>
             </div>
           </button>
-          <Button variant="outline" size="pill" onClick={() => signOut().then(() => navigate("/"))}>
-            <LogOut className="size-4" /> Sair
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={() => navigate("/perfil")}>
+              <UserRound className="size-5" />
+            </Button>
+            <Button variant="outline" size="pill" onClick={() => signOut().then(() => navigate("/"))}>
+              <LogOut className="size-4" /> Sair
+            </Button>
+          </div>
         </header>
 
         {!shop ? (
