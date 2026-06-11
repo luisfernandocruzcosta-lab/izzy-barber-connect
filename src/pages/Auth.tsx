@@ -85,9 +85,20 @@ const Auth = () => {
     if (error) {
       setLoading(false);
       console.error("Sign up error:", error);
-      const msg = error.message?.toLowerCase().includes("registered")
-        ? "Este e-mail já está em uso ou inválido."
-        : "Não foi possível concluir o cadastro. Verifique os dados e tente novamente.";
+      const raw = (error.message || "").toLowerCase();
+      const code = (error as { code?: string }).code?.toLowerCase() ?? "";
+      let msg = "Não foi possível concluir o cadastro. Verifique os dados e tente novamente.";
+      if (code === "weak_password" || raw.includes("weak") || raw.includes("pwned")) {
+        msg = "Senha muito fraca ou já vazada em outros sites. Use ao menos 8 caracteres com letras, números e símbolos.";
+      } else if (raw.includes("registered") || raw.includes("already")) {
+        msg = "Este e-mail já está em uso. Tente entrar ou redefinir a senha.";
+      } else if (raw.includes("invalid") && raw.includes("email")) {
+        msg = "E-mail inválido. Verifique e tente novamente.";
+      } else if (raw.includes("password") && raw.includes("short")) {
+        msg = "A senha precisa ter pelo menos 6 caracteres.";
+      } else if (raw.includes("signup") && raw.includes("disabled")) {
+        msg = "Cadastros estão temporariamente desativados. Tente novamente em instantes.";
+      }
       toast({ title: "Falha no cadastro", description: msg, variant: "destructive" });
       return;
     }
