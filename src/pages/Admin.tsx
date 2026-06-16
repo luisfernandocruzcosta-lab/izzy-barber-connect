@@ -1,15 +1,54 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, LogOut, Shield, Store, Users } from "lucide-react";
+import { ArrowLeft, Loader2, LogOut, Pencil, Shield, Store, Trash2, Users } from "lucide-react";
 
 import logo from "@/assets/izzy-barber-logo.png";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
-type ShopRow = { id: string; name: string; address: string; phone: string | null; created_at: string };
+type ShopRow = {
+  id: string;
+  name: string;
+  address: string;
+  phone: string | null;
+  description: string | null;
+  logo_url: string | null;
+  created_at: string;
+};
 type RoleRow = { user_id: string; role: string };
+
+type ShopForm = {
+  name: string;
+  address: string;
+  phone: string;
+  description: string;
+  logo_url: string;
+};
+
+const emptyForm: ShopForm = { name: "", address: "", phone: "", description: "", logo_url: "" };
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -20,6 +59,11 @@ const Admin = () => {
   const [shops, setShops] = useState<ShopRow[]>([]);
   const [roles, setRoles] = useState<RoleRow[]>([]);
   const [appointmentsCount, setAppointmentsCount] = useState(0);
+
+  const [editing, setEditing] = useState<ShopRow | null>(null);
+  const [form, setForm] = useState<ShopForm>(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const [deletingShop, setDeletingShop] = useState<ShopRow | null>(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -33,21 +77,81 @@ const Admin = () => {
     }
   }, [authLoading, user, isAdmin, navigate, toast]);
 
+  const loadAll = async () => {
+    setLoading(true);
+    const [shopsRes, rolesRes, apptsRes] = await Promise.all([
+      supabase
+        .from("barber_shops")
+        .select("id, name, address, phone, description, logo_url, created_at")
+        .order("created_at", { ascending: false }),
+      supabase.from("user_roles").select("user_id, role"),
+      supabase.from("appointments").select("id", { count: "exact", head: true }),
+    ]);
+    setShops((shopsRes.data ?? []) as ShopRow[]);
+    setRoles((rolesRes.data ?? []) as RoleRow[]);
+    setAppointmentsCount(apptsRes.count ?? 0);
+    setLoading(false);
+  };
+
   useEffect(() => {
     if (!isAdmin) return;
-    void (async () => {
-      setLoading(true);
-      const [shopsRes, rolesRes, apptsRes] = await Promise.all([
-        supabase.from("barber_shops").select("id, name, address, phone, created_at").order("created_at", { ascending: false }),
-        supabase.from("user_roles").select("user_id, role"),
-        supabase.from("appointments").select("id", { count: "exact", head: true }),
-      ]);
-      setShops((shopsRes.data ?? []) as ShopRow[]);
-      setRoles((rolesRes.data ?? []) as RoleRow[]);
-      setAppointmentsCount(apptsRes.count ?? 0);
-      setLoading(false);
-    })();
+    void loadAll();
   }, [isAdmin]);
+
+  const openEdit = (shop: ShopRow) => {
+    setEditing(shop);
+    setForm({
+      name: shop.name,
+      address: shop.address,
+      phone: shop.phone ?? "",
+      description: shop.description ?? "",
+      logo_url: shop.logo_url ?? "",
+    });
+  };
+
+  const closeEdit = () => {
+    setEditing(null);
+    setForm(emptyForm);
+  };
+
+  const saveEdit = async () => {
+    if (!editing) return;
+    if (!form.name.trim() || !form.address.trim()) {
+      toast({ title: "Dados incompletos", description: "Nome e endereço são obrigatórios.", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase
+      .from("barber_shops")
+      .update({
+        name: form.name.trim(),
+        address: form.address.trim(),
+        phone: form.phone.trim() || null,
+        description: form.description.trim() || null,
+        logo_url: form.logo_url.trim() || null,
+      })
+      .eq("id", editing.id);
+    setSaving(false);
+    if (error) {
+      toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Barbearia atualizada", description: "As alterações foram salvas." });
+    closeEdit();
+    await loadAll();
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingShop) return;
+    const { error } = await supabase.from("barber_shops").delete().eq("id", deletingShop.id);
+    if (error) {
+      toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Barbearia excluída", description: `${deletingShop.name} foi removida.` });
+    setDeletingShop(null);
+    await loadAll();
+  };
 
   if (authLoading || loading) {
     return (
@@ -113,18 +217,44 @@ const Admin = () => {
         </section>
 
         <section className="glass-panel mt-6 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-foreground">Barbearias cadastradas</h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">Barbearias cadastradas</h2>
+              <p className="text-sm text-muted-foreground">Edite informações ou remova barbearias do sistema.</p>
+            </div>
+          </div>
+
           {shops.length === 0 ? (
             <p className="mt-3 text-sm text-muted-foreground">Nenhuma barbearia cadastrada ainda.</p>
           ) : (
             <ul className="mt-4 space-y-3">
               {shops.map((s) => (
-                <li key={s.id} className="flex flex-col gap-1 rounded-xl border border-border/60 bg-card/50 p-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="font-semibold text-foreground">{s.name}</p>
-                    <p className="text-sm text-muted-foreground">{s.address}</p>
+                <li
+                  key={s.id}
+                  className="flex flex-col gap-3 rounded-xl border border-border/60 bg-card/50 p-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    {s.logo_url ? (
+                      <img src={s.logo_url} alt={s.name} className="size-12 rounded-lg object-cover border border-border/60" />
+                    ) : (
+                      <div className="flex size-12 items-center justify-center rounded-lg bg-secondary/60 text-muted-foreground">
+                        <Store className="size-5" />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="font-semibold text-foreground truncate">{s.name}</p>
+                      <p className="text-sm text-muted-foreground truncate">{s.address}</p>
+                      {s.phone && <p className="text-xs text-muted-foreground">{s.phone}</p>}
+                    </div>
                   </div>
-                  {s.phone && <p className="text-sm text-muted-foreground">{s.phone}</p>}
+                  <div className="flex gap-2 sm:shrink-0">
+                    <Button variant="outline" size="sm" onClick={() => openEdit(s)}>
+                      <Pencil className="size-4" /> Editar
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => setDeletingShop(s)}>
+                      <Trash2 className="size-4" /> Excluir
+                    </Button>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -143,6 +273,72 @@ const Admin = () => {
           </div>
         </section>
       </div>
+
+      <Dialog open={!!editing} onOpenChange={(open) => !open && closeEdit()}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Editar barbearia</DialogTitle>
+            <DialogDescription>Atualize as informações exibidas para os clientes.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="shop-name">Nome</Label>
+              <Input id="shop-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="shop-address">Endereço</Label>
+              <Input id="shop-address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="shop-phone">Telefone</Label>
+              <Input id="shop-phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="shop-logo">URL do logo</Label>
+              <Input id="shop-logo" value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="shop-desc">Descrição</Label>
+              <Textarea
+                id="shop-desc"
+                rows={3}
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={closeEdit} disabled={saving}>
+              Cancelar
+            </Button>
+            <Button onClick={saveEdit} disabled={saving}>
+              {saving && <Loader2 className="size-4 animate-spin" />}
+              Salvar alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!deletingShop} onOpenChange={(open) => !open && setDeletingShop(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir barbearia?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação removerá <strong>{deletingShop?.name}</strong> e todos os dados associados (serviços, equipe,
+              agendamentos). Não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir permanentemente
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 };
